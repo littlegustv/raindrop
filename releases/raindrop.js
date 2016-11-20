@@ -490,7 +490,9 @@ var HandleCollision = {
         	}//object.velY *= -1;
 		}
 	}
-}var PI = Math.PI;
+}
+
+var PI = Math.PI;
 var PI2 = 2 * Math.PI;
 
 function distance(x1, y1, x2, y2) {
