@@ -1351,7 +1351,8 @@ var Gamepad = {
 }
 
 //var myGamePad = Object.create(Gamepad).init();
-//https://jsfiddle.net/littlegustv/k1jb2qba/5/var Layer = {
+//https://jsfiddle.net/littlegustv/k1jb2qba/5/
+var Layer = {
   init: function (camera) {
     this.camera = camera;
     this.entities = [];
@@ -1413,7 +1414,9 @@ var Gamepad = {
       }
     }
   }
-};var gameWorld;
+};
+
+var gameWorld;
 
 window.addEventListener("DOMContentLoaded", function () {
 	/* create a game world, including canvas, context and configuration... load resources */
@@ -1422,7 +1425,9 @@ window.addEventListener("DOMContentLoaded", function () {
 	//var s = Object.create(Scene).init("mainmenu");
 	//gameWorld.scene = s;
 
-});var Particles = Object.create(Entity);
+});
+
+var Particles = Object.create(Entity);
 Particles.init = function (x, y, createParticle, rate, max, random) {
   this.behaviors = [];
   this.particles = [];
@@ -1557,7 +1562,9 @@ var Scene = {
 			}
 		}*/
 	}
-};var onStart = function () {
+};
+
+var onStart = function () {
 
   var fg_camera = Object.create(Camera).init(0, 0);
 
