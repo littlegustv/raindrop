@@ -973,7 +973,9 @@ Horizon.update = function (dt) {
       this.entity.alive = false;
     }
   }
-}var Entity = {
+}
+
+var Entity = {
 	velocity: {x: 0, y: 0},
 	offset: {x: 0, y: 0},
 	opacity: 1,
@@ -1273,7 +1275,9 @@ Button.init = function (x, y, w, h, object) {
   this.object = object;
   this.x = x, this.y = y, this.w = w, this.h = h;
   return this;
-}var mapping = ["a", "b", "x", "y", "lb", "rb", "lt", "rt", "back", "start", "ls", "rs", "dup", "ddown", "dleft", "dright"];
+}
+
+var mapping = ["a", "b", "x", "y", "lb", "rb", "lt", "rt", "back", "start", "ls", "rs", "dup", "ddown", "dleft", "dright"];
 
 var GamepadButton = {
 	init: function (name, gamepad) {
@@ -1458,7 +1462,9 @@ Particles.onDraw = function (ctx) {
   for (var i = 0; i < this.particles.length; i++) {
     this.particles[i].draw(ctx);
   }
-}var Scene = {
+}
+
+var Scene = {
 	resourceCount: 1,
 	resourceLoadCount: 0,
 	init: function (name) {
