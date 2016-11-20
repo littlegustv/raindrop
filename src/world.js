@@ -136,7 +136,9 @@ var World = {
 	addEventListeners: function (scene) {
 		var t = this;
 		var c = this.canvas;
-		this.canvas = this.canvas.cloneNode();
+		var canvas = this.canvas.cloneNode();
+		this.canvas.parentNode.replaceChild(this.canvas, canvas);
+		this.canvas = canvas;
 		this.ctx = this.canvas.getContext('2d');
 		
 		this.ctx.mozImageSmoothingEnabled = false;
@@ -144,7 +146,7 @@ var World = {
 		this.ctx.msImageSmoothingEnabled = false;
 		this.ctx.imageSmoothingEnabled = false;
 		
-		c.parentNode.replaceChild(this.canvas, c);
+		//c.parentNode.replaceChild(this.canvas, c);
 		if (scene.ready) {
 			if (scene.onClick) this.canvas.addEventListener('click', scene.onClick);
 			if (scene.onMouseMove) this.canvas.addEventListener('mousemove', scene.onMouseMove);
