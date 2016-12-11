@@ -137,7 +137,7 @@ var World = {
 	},
 	setScene: function (n) {
 	  if (this.scenes[n].reload) {
-	    this.scenes[n] = Object.create(Scene).init(this.scenes[n].name);
+	    this.scenes[n] = Object.create(Scene).init(this.scenes[n].name, true);
 	  }
 	  this.removeEventListeners(this.scene);
 	  this.scene = this.scenes[n];
