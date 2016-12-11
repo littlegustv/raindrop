@@ -1,0 +1,10 @@
+{
+  "scenes": [
+    "game.json"
+  ],
+  "resources": [
+    {"path": "bicycle.png", "frames": 2, "speed": 0.4, "animations": 1},
+    {"path": "ground.png"}
+  ],
+  "fontFamily": "Visitor"
+}

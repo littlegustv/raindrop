@@ -1,11 +1,13 @@
 var Scene = {
 	resourceCount: 1,
 	resourceLoadCount: 0,
-	init: function (name) {
+	init: function (name, file) {
 		this.time = 0;
 		this.name = name;
 		this.layers = [];
-		this.loadData();
+		if (file) {
+			this.loadData();
+		}
 		return this;
 	},
 	onStart: function () {},
