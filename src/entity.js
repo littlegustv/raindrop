@@ -23,6 +23,9 @@ var Entity = {
 		ctx.translate(this.x, this.y);
 		ctx.translate(this.offset.x, this.offset.y);
 		ctx.rotate(this.angle);
+		if (this.scale !== undefined) {
+			ctx.scale(this.scale, this.scale);
+		}
 		if (this.blend) {
 			ctx.globalCompositeOperation = this.blend;
 		} else {
@@ -126,6 +129,7 @@ var Entity = {
 
 var Circle =Object.create(Entity);
 Circle.init = function(x, y, radius) {
+	this.behaviors = [];
 	this.x = x, this.y = y, this.radius = radius;
 	return this;
 }

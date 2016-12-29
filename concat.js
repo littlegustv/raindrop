@@ -10,7 +10,7 @@ for (var i = 0; i < files.length; i++) {
 }
 
 var now = new Date();
-var release_name = "raindrop" + now.toISOString().split('T0')[0];
+var release_name = "raindrop" + now.toISOString().split('T')[0];
 fs.writeFile("releases/" + release_name + ".js", output, function (err) {
   if (err) return console.log(err);
   console.log(release_name + " created.");

@@ -1,12 +1,17 @@
 var Layer = {
   init: function (camera) {
-    this.camera = camera;
+    if (camera) {
+      this.camera = camera;
+    } else {
+      this.camera = Object.create(Camera).init(0,0);
+    }
     this.entities = [];
     return this;
   },
   add: function (e) {
     e.layer = this;
     this.entities.push(e);
+    return e;
   },
   remove: function (e) {
     var index = this.entities.indexOf(e);

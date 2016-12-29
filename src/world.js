@@ -4,15 +4,6 @@ var World = {
 	init: function (gameinfo) {
 		this.height = CONFIG.height, this.width = CONFIG.width;
 		var t = this;
-		window.addEventListener('DOMContentLoaded', function (e) {
-			t.createCanvas();
-			t.createDebug();
-			if (t.scene) {
-				t.scene.onStart();
-				t.startTime = new Date();
-				t.step();
-			}
-		});
 		this.scenes = [];
 		this.time = 0;
 		this.speed = 1;
@@ -20,9 +11,21 @@ var World = {
 		this.paused = false;
 		this.muted = false;
 //		this.loadScenes();
-		if (gameinfo) {
-			this.loadGameInfo(gameinfo);
-		}
+		window.addEventListener('DOMContentLoaded', function (e) {
+			t.createCanvas();
+			t.createDebug();
+			if (gameinfo) {
+				t.loadGameInfo(gameinfo);
+			} else {
+				t.setScene(0);
+				if (t.scene) {
+					t.scene.onStart();
+					t.startTime = new Date();
+					t.beginTime();
+					t.step();
+				}
+			}
+		});
 		return this;
 	},
 	step: function () {
@@ -85,8 +88,10 @@ var World = {
 		this.resourceLoadCount += 1;
 		var t = this;
 		if (this.resourceLoadCount >= this.resourceCount) {
+			this.setScene(0);
 			if (this.scene) {
 				setTimeout( function () {
+					t.scene.onStart();
 					t.beginTime();
 					t.step();
 				}, 100);

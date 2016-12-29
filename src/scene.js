@@ -13,12 +13,17 @@ var Scene = {
 	onStart: function () {},
 	onUpdate: function () {},
 	onEnd: function () {},
+	addLayer: function (layer) {
+		this.layers.push(layer);
+		return layer;
+	},
 	add: function (e) {
 		if (this.layers.length <= 0) console.log('this scene has no layers.');
 		else {
 			var layer = e.layer || this.layers[0];
 			layer.add(e);
 		}
+		return e;
 	},
 	remove: function (e) {
 		if (this.layers.length <= 0) console.log('this scene has no layers.');
