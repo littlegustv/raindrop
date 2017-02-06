@@ -40,8 +40,25 @@ function project(axes, vertices) {
   return [min, max];
 }
 
+function between(n, min, max) {
+  return n >= min && n <= max;
+}
+
+function randomColor () {
+  return "#" + ("000000" + Math.floor(Math.random()*Math.pow(256,3)).toString(16)).substr(-6);
+}
+
+function randint(min, max) {
+  return Math.floor(Math.random() * (max - min)) + min;
+}
+
 function lerp (current, goal, rate) {
   return (1-rate)*current + rate*goal
+}
+
+function normalize (x, y) {
+  var d = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+  return {x: x / d, y: y / d};
 }
 
 function overlap(p1, p2) {
@@ -64,50 +81,7 @@ function distance (x1, y1, x2, y2) {
 	return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
 }
 
-var CONFIG = {
-	height: 360,
-	width: 640,
-	title: "My Game",
-	startScene: "game",
-	debug: false
-};
-
- var GLOBALS = {
-	scale: 2,
-	invulnerability: 0.3
-};
-
-var SPEED = {
-	// max speeds
-	ship: 160,
-  projectile: 330,
-  // acceleration multipliers
-  acel: 600,
-  decel: 0.01,
-  gravity: 0.1
-};
-
-var TYPE = {
-	player: 0,
-  enemy: 1,
-  neutral: 2,
-  obstacle: 3
-};
-
-var CLASS = {
-	none: 0,
-	ship: 1,
-  projectile: 2,
-  solid: 3,
-  item: 4
-};
-
-var DIRECTION = {
-	right: 0,
-	up: 1,
-	left: 2,
-	down: 3
-};
+var DEBUG = false;
 
 var KEYCODES = {
 	37: "left",

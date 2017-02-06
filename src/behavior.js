@@ -76,6 +76,7 @@ DrawHitBox.draw = function (ctx) {
 
 
 var Pathfind = Object.create(Behavior);
+Pathfind.speed = 160;
 Pathfind.start = function () {
 	// create grid, path
 	var grid = [];
@@ -109,7 +110,7 @@ Pathfind.start = function () {
 }
 Pathfind.draw = function (ctx) {
 	//return;
-	if (!CONFIG.debug) return;
+	if (!DEBUG) return;
 	if (this.grid) {
 		ctx.globalAlpha = 0.3;
 		ctx.fillStyle = this.route && this.route.length > 0 ? "green" : "yellow";
@@ -211,7 +212,8 @@ Pathfind.update = function (dt) {
 		if (this.route && this.route.length > 0) {
 			if (this.goal) {
 				var theta = angle(this.entity.x, this.entity.y, this.goal.x, this.goal.y);
-				var dx = 1.5 * SPEED.ship * Math.cos(theta), dy = 1.5 * SPEED.ship * Math.sin(theta);
+				// FIX ME: what is 'speed' used for??? (used to be SPEED.ship)
+				var dx = 1.5 * this.speed * Math.cos(theta), dy = 1.5 * this.speed * Math.sin(theta);
 				this.entity.velocity.x += 3 * dt * (dx - this.entity.velocity.x);
 				this.entity.velocity.y += 3 * dt * (dy - this.entity.velocity.y);
 				if (distance(this.entity.x, this.entity.y, this.goal.x, this.goal.y) < 20) {
@@ -244,13 +246,14 @@ Pathfind.update = function (dt) {
 }
 
 var SimpleAI = Object.create(Behavior);
+SimpleAI.speed = 160;
 SimpleAI.update = function (dt) {
 	//console.log(this.target);
 	//console.log(this.target.x, this.entity.x, (this.entity.x > this.target.x ? -1 : 1))
 	// FIX ME: obviously, once the screep is wrapping, you need to factor that in too...
 	this.entity.velocity = {
-		x: clamp( (this.entity.x > this.target.x ? -1 : 1) * Math.abs(this.entity.x - this.target.x) / 2, - SPEED.ship / 2, SPEED.ship / 2),
-		y: clamp( (this.entity.y > this.target.y ? -1 : 1) * Math.abs(this.entity.y - this.target.y) / 2, - SPEED.ship / 2, SPEED.ship / 2)
+		x: clamp( (this.entity.x > this.target.x ? -1 : 1) * Math.abs(this.entity.x - this.target.x) / 2, - this.speed / 2, this.speed / 2),
+		y: clamp( (this.entity.y > this.target.y ? -1 : 1) * Math.abs(this.entity.y - this.target.y) / 2, - this.speed / 2, this.speed / 2)
 	}
 	if (this.entity.health < 5) {
 		this.entity.removeBehavior(this);

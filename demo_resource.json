@@ -1,6 +1,10 @@
 {
+  "scale": 2,
   "scenes": [
-    "game.json"
+    {
+      "name": "game",
+      "reload": true
+    }
   ],
   "resources": [
     {"path": "bicycle.png", "frames": 2, "speed": 0.4, "animations": 1},

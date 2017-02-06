@@ -58,7 +58,7 @@ var Entity = {
 	setVertices: function (vertices) {
 		if (vertices) {
 			this.vertices = vertices.map( function (v) {
-				var _d = GLOBALS.scale * Math.sqrt(Math.pow(v.x, 2) + Math.pow(v.y, 2));
+				var _d = Math.sqrt(Math.pow(v.x, 2) + Math.pow(v.y, 2));
 				var _theta = Math.atan2(v.y, v.x);
 				return {d: _d, theta: _theta}
 			});
@@ -153,7 +153,7 @@ Sprite.init = function (x, y, sprite) {
 		// FIX ME: add multiple animations (see PLATFORMS code)
 		this.sprite = sprite, this.sprite.w = this.sprite.image.width / this.sprite.frames;
 		this.animations = sprite.animations, this.animation = 0, this.sprite.h = this.sprite.image.height / this.animations;
-		this.h = this.sprite.h * GLOBALS.scale, this.w = this.sprite.image.width * GLOBALS.scale / this.sprite.frames;
+		this.h = this.sprite.h, this.w = this.sprite.image.width / this.sprite.frames;
 		this.frame = 0, this.maxFrame = this.sprite.frames, this.frameDelay = this.sprite.speed, this.maxFrameDelay = this.sprite.speed;
 		//this.imageData = this.getImageData(buf);
 	}
@@ -166,7 +166,7 @@ Sprite.onDraw = function (ctx) {
 		Math.round(this.x - this.w / 2), this.y - Math.round(this.h / 2), this.w, this.h);
 };
 Sprite.drawDebug = function (ctx) {
-	if (CONFIG.debug) {
+	if (DEBUG) {
 		ctx.strokeStyle = "red";
 		if (this.getVertices) {
 			var v = this.getVertices();
@@ -212,7 +212,7 @@ TiledBackground.init = function (x, y, w, h, sprite) {
 	if (sprite) {
 		// FIX ME: add multiple animations (see PLATFORMS code)
 		this.sprite = sprite, this.sprite.h = this.sprite.image.height, this.sprite.w = this.sprite.image.width / this.sprite.frames;
-		this.h = this.sprite.image.height * GLOBALS.scale, this.w = this.sprite.image.width * GLOBALS.scale / this.sprite.frames;
+		this.h = this.sprite.image.height, this.w = this.sprite.image.width / this.sprite.frames;
 		this.frame = 0, this.maxFrame = this.sprite.frames, this.frameDelay = this.sprite.speed, this.maxFrameDelay = this.sprite.speed;
 		//this.imageData = this.getImageData(buf);
 	}
@@ -222,15 +222,15 @@ TiledBackground.init = function (x, y, w, h, sprite) {
 	return this;
 };
 TiledBackground.onDraw = function (ctx) {
-	for (var i = 0; i < this.w; i += this.sprite.w * GLOBALS.scale) {
-		for (var j = 0; j < this.h; j += this.sprite.h * GLOBALS.scale) {
+	for (var i = 0; i < this.w; i += this.sprite.w) {
+		for (var j = 0; j < this.h; j += this.sprite.h) {
 			ctx.drawImage(this.sprite.image, 
 				this.frame * this.sprite.w, 0, 
 				this.sprite.w, this.sprite.h, 
-				Math.floor(this.x - this.w / 2) + i, this.y - Math.floor(this.h / 2) + j, this.sprite.w * GLOBALS.scale, this.sprite.h * GLOBALS.scale);
+				Math.floor(this.x - this.w / 2) + i, this.y - Math.floor(this.h / 2) + j, this.sprite.w, this.sprite.h);
 		}
 	}/*
-	if (CONFIG.debug) {
+	if (DEBUG) {
 		ctx.strokeStyle = "red";
 		ctx.strokeRect(this.x - this.w / 2, this.y - this.h / 2, this.w, this.h);
 		ctx.strokeRect(this.x - 2, this.y - 2, 4, 4);
@@ -239,8 +239,10 @@ TiledBackground.onDraw = function (ctx) {
 
 var Camera = Object.create(Entity);
 Camera.to_s = "Camera";
+Camera.scale = 1;
 Camera.draw = function (ctx) {
 	ctx.translate(-this.x,-this.y);
+  ctx.scale(this.scale, this.scale);
 };
 Camera.shake = function (n) {
 	if (n == 0) {
@@ -293,7 +295,7 @@ Button.check = function (x, y) {
   return false;
 };
 Button.draw = function (ctx) {
-  if (CONFIG.debug) {
+  if (DEBUG) {
     ctx.fillStyle = "green";
     ctx.fillRect(this.x - this.w / 2, this.y - this.h / 2, this.w, this.h);
   }

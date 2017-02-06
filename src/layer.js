@@ -1,5 +1,6 @@
 var Layer = {
   init: function (camera) {
+    this.paused = 0;
     if (camera) {
       this.camera = camera;
     } else {
@@ -32,7 +33,7 @@ var Layer = {
 
     for (var i = 0; i < entities.length; i++) {
       entities[i].draw(ctx);
-      /*if (CONFIG.debug) {
+      /*if (DEBUG) {
         ctx.font = "24px Visitor";
         ctx.fillText(i + ", z: " + entities[i].z, entities[i].x, entities[i].y);
       }*/
@@ -50,7 +51,10 @@ var Layer = {
     }
   },
   update: function (dt) {
-    // update
+    if (this.paused > 0) {
+      this.paused -= dt;
+      return;
+    }
     this.camera.update(dt);
     for (var i = 0; i < this.entities.length; i++) {
       this.entities[i].update(dt);

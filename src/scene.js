@@ -6,7 +6,7 @@ var Scene = {
 		this.name = name;
 		this.layers = [];
 		if (file) {
-			this.loadData();
+			this.loadBehavior(this.name + ".js");
 		}
 		return this;
 	},
@@ -36,42 +36,33 @@ var Scene = {
 		this.resourceLoadCount += 1;
 		if (this.resourceLoadCount >= this.resourceCount) {
 			this.ready = true;
-			this.onStart();
+			//this.onStart();
 		}
 	},
-	loadData: function () {
-		var t = this;
-
-		var request  = new XMLHttpRequest();
-		request.open("GET", "scenes/" + this.name + ".json", true);
-		request.onload = function () {
-			t.data = JSON.parse(request.response);
-			t.width = t.data.width, t.height = t.data.height, t.reload = t.data.reload;
-			if (t.data.script) {
-				t.resourceCount += 1;
-				t.loadBehavior(t.data.script)
-			}
-			t.loadProgress();
-		};
-		request.send();
-	},
 	loadBehavior: function (script) {
-		var s = document.createElement("script");
-		s.type = "text/javascript";
-		s.src = "scenes/" + script;
-		document.body.appendChild(s);
+    var s = document.createElement("script");
+    s.type = "text/javascript";
+    s.src = "scenes/" + script;
+    s.id = this.name;
 
-		// FIX ME: cross browser support
-		var t = this;
+    var old = document.getElementById(this.name);
+    if (old) {
+      old.parentElement.removeChild(old);
+    }
+    document.body.appendChild(s);
 
-		s.onload = function () {
-			t.onStart = onStart;
-			t.onUpdate = onUpdate;
-			t.onEnd = onEnd;
-			t.onDraw = onDraw;
-			t.loadProgress();
-		};
-	},
+    // FIX ME: cross browser support
+    var t = this;
+    s.onload = function () {
+      t.onStart = onStart;
+      t.onUpdate = onUpdate;
+      t.onEnd = onEnd;
+      t.onDraw = onDraw;
+      t.onStart();
+      t.ready = true;
+      //t.loadProgress();
+    };
+  },
 	draw: function (ctx) {
 		// FIX ME: ctx.save/restore in place for camera, is there a better place for it?
 		//ctx.save();

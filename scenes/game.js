@@ -1,23 +1,21 @@
 var onStart = function () {
 
-  var fg_camera = Object.create(Camera).init(0, 0);
-
-  var fg = Object.create(Layer).init(fg_camera);
-  this.layers.push(fg);
-
-  var bicycle = Object.create(Sprite).init(200, 200, Resources.bicycle);
+  var fg = this.addLayer(Object.create(Layer).init());
+  
+  var bicycle = Object.create(Sprite).init(100, 100, Resources.bicycle);
   bicycle.addBehavior(Velocity);
   bicycle.velocity = {x: 60, y: 0};
-  bicycle.addBehavior(Wrap, {min: {x: 0, y: 0,}, max: {x: 640, y: 360}});
+  bicycle.addBehavior(Wrap, {min: {x: 0, y: 0,}, max: {x: gameWorld2.width, y: gameWorld2.height}});
   fg.add(bicycle);
+  debug = bicycle;
 
-  var road = Object.create(TiledBackground).init(CONFIG.width / 2, 220, CONFIG.width, 16, Resources.ground);
+  var road = Object.create(TiledBackground).init(gameWorld2.width / 2, 110, gameWorld2.width, 8, Resources.ground);
   fg.add(road);
 
   this.onKeyDown = function (e) {
     e.preventDefault();
     return false;
-  }
+  };
 
 };
 
