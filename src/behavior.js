@@ -267,6 +267,11 @@ Wrap.update = function (dt) {
 	} else if (this.entity.x < this.min.x) {
 		this.entity.x = this.max.x  - (this.min.x - this.entity.x);
 	}
+  if (this.entity.y > this.max.y) {
+		this.entity.y = this.min.y + (this.entity.y - this.max.y);
+	} else if (this.entity.y < this.min.y) {
+		this.entity.y = this.max.y  - (this.min.y - this.entity.y);
+	}
 }
 
 var Invulnerable = Object.create(Behavior);

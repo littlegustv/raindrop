@@ -4,7 +4,11 @@
     {
       "name": "game",
       "reload": true
-    }
+    },
+    {
+      "name": "game2",
+      "reload": true
+    }    
   ],
   "resources": [
     {"path": "bicycle.png", "frames": 2, "speed": 0.4, "animations": 1},

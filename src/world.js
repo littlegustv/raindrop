@@ -2,6 +2,7 @@ var AudioContext = window.AudioContext || window.webkitAudioContext;
 
 // creates window
 var World = {
+  events: ["onClick", "onMouseMove", "onMouseDown", "onMouseUp", "onKeyDown", "onKeyUp", "onKeyPress", "onTouchStart", "onTouchEnd", "onTouchCancel", "onTouchMove"],
   init: function (width, height, gameinfo) {
     this.height = height, this.width = width;
     var t = this;
@@ -65,6 +66,10 @@ var World = {
       this.canvas.style.width = window.innerWidth + "px";
       scale = window.innerWidth / this.canvas.width;
     }
+    this.scale = scale;
+  },
+  filterEvent: function (event) {
+    return {x: event.offsetX / this.scale, y: event.offsetY / this.scale};
   },
   createCanvas: function () {
     this.canvas = document.createElement("canvas");
@@ -168,40 +173,42 @@ var World = {
   },
   removeEventListeners: function (scene) {
     if (scene && scene.ready) {
-      if (scene.onClick) this.canvas.removeEventListener('click', scene.onClick);
-      if (scene.onMouseMove) this.canvas.removeEventListener('mousemove', scene.onMouseMove);
-      if (scene.onMouseDown) this.canvas.removeEventListener('mousedown', scene.onMouseDown);
-      if (scene.onMouseUp) this.canvas.removeEventListener('mouseup', scene.onMouseUp);
-      if (scene.onKeyDown) document.removeEventListener('keydown', scene.onKeyDown);
-      if (scene.onKeyUp) document.removeEventListener('keyup', scene.onKeyUp);
-      if (scene.onKeyPress) document.removeEventListener('keypress', scene.onKeyPress);
-
-      if (scene.onTouchStart) this.canvas.removeEventListener('touchstart', scene.onTouchStart);
-      if (scene.onTouchEnd) this.canvas.removeEventListener('touchend', scene.onTouchEnd);
-      if (scene.onTouchCancel) this.canvas.removeEventListener('touchcancel', scene.onTouchCancel);
-      if (scene.onTouchMove) this.canvas.removeEventListener('touchmove', scene.onTouchMove);
-
+      for (var i = 0; i < this.events.length; i++) {
+        var event = this.events[i];
+        if (this[event]) {
+          if (event.substr(0,5) == "onKey") {
+            document.removeEventListener(event.toLowerCase().substr(2,event.length - 2), this[event]);
+          } else {            
+            this.canvas.removeEventListener(event.toLowerCase().substr(2,event.length - 2), this[event]);
+          } 
+        }
+      }
     }
   },
   addEventListeners: function (scene) {
+    var w = this;
     if (scene.ready) {
-      if (scene.onClick) this.canvas.addEventListener('click', scene.onClick);
-      if (scene.onMouseMove) this.canvas.addEventListener('mousemove', scene.onMouseMove);
-      if (scene.onMouseDown) this.canvas.addEventListener('mousedown', scene.onMouseDown);
-      if (scene.onMouseUp) this.canvas.addEventListener('mouseup', scene.onMouseUp);
-      if (scene.onKeyDown) document.addEventListener('keydown', scene.onKeyDown);
-      if (scene.onKeyUp) document.addEventListener('keyup', scene.onKeyUp);
-      if (scene.onKeyPress) document.addEventListener('keypress', scene.onKeyPress);
-
-      if (scene.onTouchStart) this.canvas.addEventListener('touchstart', scene.onTouchStart);
-      if (scene.onTouchEnd) this.canvas.addEventListener('touchend', scene.onTouchEnd);
-      if (scene.onTouchCancel) this.canvas.addEventListener('touchcancel', scene.onTouchCancel);
-      if (scene.onTouchMove) this.canvas.addEventListener('touchmove', scene.onTouchMove);
-
+      for (var i = 0; i < this.events.length; i++) {
+      // interesting : to create a unique var scope, wrap this in a function - a closure, perhaps?
+        (function () {
+        var event = w.events[i];
+        if (scene[event]) {
+          //w[event] = scene[event];
+          w[event] = function (e) {
+            scene[event](w.filterEvent(e));
+          };
+          if (event.substr(0,5) == "onKey") {
+            document.addEventListener(event.toLowerCase().substr(2,event.length - 2), w[event]);
+          } else {            
+            w.canvas.addEventListener(event.toLowerCase().substr(2,event.length - 2), w[event]);
+          }
+        }
+        })();
+      }
     } else {
       var t = this;
       // fix me: is there maybe a more elegant way of checking whether the scene is loaded?
-      setTimeout(function () { t.addEventListeners(scene), 500});
+      setTimeout(function () { t.addEventListeners(scene); }, 500);
     }
   },
   initAudio: function () {

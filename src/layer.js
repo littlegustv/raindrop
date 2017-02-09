@@ -7,6 +7,21 @@ var Layer = {
       this.camera = Object.create(Camera).init(0,0);
     }
     this.entities = [];
+    this.canvas = document.createElement('canvas');
+    this.canvas.width = gameWorld.width, this.canvas.height = gameWorld.height;
+    this.ctx = this.canvas.getContext('2d');
+    // is all of this neccessary?
+    this.ctx.mozImageSmoothingEnabled = false;
+    this.ctx.webkitImageSmoothingEnabled = false;
+    this.ctx.msImageSmoothingEnabled = false;
+    this.ctx.imageSmoothingEnabled = false;
+
+    this.canvas.style.imageRendering = "optimizeSpeed";
+    this.canvas.style.imageRendering = "-moz-crisp-edges";
+    this.canvas.style.imageRendering = "-webkit-optimize-contrast";
+    this.canvas.style.imageRendering = "-o-crisp-edges";
+    this.canvas.style.imageRendering = "pixelated";
+    this.canvas.style.msInterpolationMode = "nearest-neighbor";
     return this;
   },
   add: function (e) {
@@ -21,10 +36,10 @@ var Layer = {
     }
   },
   draw: function (ctx) {
-    // FIX ME: ctx.save/restore in place for camera, is there a better place for it?
-    ctx.save();
-    this.camera.draw(ctx);
-    
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.save();
+    this.camera.draw(this.ctx);
+
     if (this.drawOrder) {
       var entities = this.drawOrder();
     } else {
@@ -32,13 +47,9 @@ var Layer = {
     }
 
     for (var i = 0; i < entities.length; i++) {
-      entities[i].draw(ctx);
-      /*if (DEBUG) {
-        ctx.font = "24px Visitor";
-        ctx.fillText(i + ", z: " + entities[i].z, entities[i].x, entities[i].y);
-      }*/
+      entities[i].draw(this.ctx);
     }
-    ctx.restore();
+    this.ctx.restore();
   },
   onButton: function (x, y) {
     for (var i = 0; i < this.entities.length; i++) {

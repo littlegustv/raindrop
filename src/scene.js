@@ -64,13 +64,10 @@ var Scene = {
     };
   },
 	draw: function (ctx) {
-		// FIX ME: ctx.save/restore in place for camera, is there a better place for it?
-		//ctx.save();
-		for (var i = 0; i < this.layers.length; i++) {
-			this.layers[i].draw(ctx);
-		}
-		//ctx.restore();
-		//if (this.onDraw) this.onDraw(ctx);
+    for (var i = 0; i < this.layers.length; i++) {
+      this.layers[i].draw(ctx);
+      ctx.drawImage(this.layers[i].canvas, 0, 0);
+    }
 	},
 	update: function (dt) {
 		// update
