@@ -1,6 +1,6 @@
 var onStart = function () {
 
-  var fg = this.addLayer(Object.create(Layer).init());
+  var fg = this.addLayer(Object.create(Layer).init(gameWorld2.width, gameWorld2.height));
   
   var bicycle = Object.create(Sprite).init(100, 100, Resources.bicycle);
   bicycle.addBehavior(Velocity);
@@ -16,7 +16,7 @@ var onStart = function () {
     gameWorld2.setScene(1);
   };
 
-  var ll = this.addLayer(Object.create(Layer).init());
+  var ll = this.addLayer(Object.create(Layer).init(gameWorld2.width, gameWorld2.height));
   var dark = ll.add(Object.create(Entity).init(gameWorld2.width / 2, gameWorld2.height / 2, gameWorld2.width, gameWorld2.height));
   dark.opacity = 0.9;
 

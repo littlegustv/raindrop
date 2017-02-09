@@ -2,7 +2,7 @@ var gameWorld = Object.create(World).init(640, 360);
 
 var s = Object.create(Scene).init("game");
 s.onStart = function () {
-  var fg = this.addLayer(Object.create(Layer).init());
+  var fg = this.addLayer(Object.create(Layer).init(gameWorld.width, gameWorld.height));
 
   var floor = Object.create(Entity).init(300, 300, 600, 200);
   var grd = gameWorld.ctx.createLinearGradient(300, 400, 300, 200);
@@ -29,7 +29,6 @@ s.onStart = function () {
 
 // needs this to signify when we can load things like event handlers, etc.
   this.ready = true;
-  this.layers.push(fg);
 };
 gameWorld.scenes.push(s);
 gameWorld.setScene(0);

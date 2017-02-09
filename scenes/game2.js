@@ -1,6 +1,6 @@
 var onStart = function () {
 
-  var fg = this.addLayer(Object.create(Layer).init());
+  var fg = this.addLayer(Object.create(Layer).init(gameWorld2.width, gameWorld2.height));
   
   var bicycle = Object.create(Sprite).init(100, 100, Resources.bicycle);
   bicycle.addBehavior(Velocity);

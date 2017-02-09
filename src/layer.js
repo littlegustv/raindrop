@@ -1,5 +1,5 @@
 var Layer = {
-  init: function (camera) {
+  init: function (w, h, camera) {
     this.paused = 0;
     if (camera) {
       this.camera = camera;
@@ -8,7 +8,7 @@ var Layer = {
     }
     this.entities = [];
     this.canvas = document.createElement('canvas');
-    this.canvas.width = gameWorld.width, this.canvas.height = gameWorld.height;
+    this.canvas.width = w, this.canvas.height = h;
     this.ctx = this.canvas.getContext('2d');
     // is all of this neccessary?
     this.ctx.mozImageSmoothingEnabled = false;
