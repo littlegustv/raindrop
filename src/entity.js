@@ -19,6 +19,9 @@ var Entity = {
   getBoundX: function () { return Math.floor(this.x - this.w/2); },
   getBoundY: function () { return Math.floor(this.y - this.h/2); },
 	draw: function (ctx) {
+		for (var i = 0; i < this.behaviors.length; i++) {
+			this.behaviors[i].draw(ctx);
+		}
 		ctx.save();
 		ctx.translate(this.x, this.y);
 		ctx.translate(this.offset.x, this.offset.y);
@@ -36,16 +39,13 @@ var Entity = {
 		}
 		ctx.translate(-this.x, -this.y);
 		ctx.globalAlpha = this.opacity;
-		for (var i = 0; i < this.behaviors.length; i++) {
-			this.behaviors[i].draw(ctx);
-		}
 		this.onDraw(ctx);
-		for (var i = 0; i < this.behaviors.length; i++) {
-			this.behaviors[i].drawAfter(ctx);
-		}
 
 		ctx.globalAlpha = 1;
 		ctx.restore();
+		for (var i = 0; i < this.behaviors.length; i++) {
+			this.behaviors[i].drawAfter(ctx);
+		}
 		this.drawDebug(ctx);
 	},
 	drawDebug: function (ctx) {
@@ -217,24 +217,18 @@ TiledBackground.init = function (x, y, w, h, sprite) {
 		//this.imageData = this.getImageData(buf);
 	}
 	this.x = x, this.y = y;
-	this.w = w, this.h = h;
-	this.behaviors = [];
+  this.w = w, this.h = h;
+  this.behaviors = [];
 	return this;
 };
 TiledBackground.onDraw = function (ctx) {
-	for (var i = 0; i < this.w; i += this.sprite.w) {
-		for (var j = 0; j < this.h; j += this.sprite.h) {
-			ctx.drawImage(this.sprite.image, 
-				this.frame * this.sprite.w, 0, 
-				this.sprite.w, this.sprite.h, 
-				Math.floor(this.x - this.w / 2) + i, this.y - Math.floor(this.h / 2) + j, this.sprite.w, this.sprite.h);
-		}
-	}/*
-	if (DEBUG) {
-		ctx.strokeStyle = "red";
-		ctx.strokeRect(this.x - this.w / 2, this.y - this.h / 2, this.w, this.h);
-		ctx.strokeRect(this.x - 2, this.y - 2, 4, 4);
-	}*/
+	if (!this.pattern) {
+		this.pattern = ctx.createPattern(this.sprite.image,"repeat");
+  }
+	ctx.fillStyle = this.pattern;
+  ctx.translate((this.x - this.w / 2), (this.y - this.h / 2));
+  ctx.fillRect(0, 0, this.w, this.h);
+  ctx.translate(-(this.x - this.w / 2), -(this.y - this.h / 2));
 };
 
 var Camera = Object.create(Entity);
