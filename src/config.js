@@ -25,6 +25,16 @@ function sign (n) {
   return n >= 0 ? 1 : -1;
 }
 
+function short_angle(a1, a2) {
+  var MAX = Math.PI * 2;  
+  var da = (a2 - a1) % MAX;
+  return 2 * da % MAX - da;
+}
+
+function lerp_angle (a1, a2, rate) {
+  return a1 + short_angle(a1, a2) * rate;
+}
+
 function choose (array) {
   return array[Math.floor(Math.random() * array.length)];
 }
@@ -52,8 +62,17 @@ function randint(min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
+function randomGray () {
+  var seed = ("00" + Math.floor(Math.random() * 150 + 56).toString(16)).substr(-2);
+  return "#" + seed + seed + seed;
+}
+
 function lerp (current, goal, rate) {
-  return (1-rate)*current + rate*goal
+  if (Math.abs(goal - current) <= 1) {
+    return goal;
+  } else {
+    return (1-rate)*current + rate*goal
+  }  
 }
 
 function normalize (x, y) {

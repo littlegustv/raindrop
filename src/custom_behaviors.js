@@ -1,11 +1,28 @@
+// movement (x,y), size, rate
+var TileMovement = Object.create(Behavior);
+TileMovement.update = function (dt) {
+  if (this.movement.y != 0) {
+    this.entity.y += this.movement.y * this.speed * dt;
+  } else {
+    this.entity.y = lerp(this.entity.y, Math.round(this.entity.y / this.size) * this.size, this.rate * dt);
+  }
+  if (this.movement.x != 0) {
+    this.entity.x += this.movement.x * this.speed * dt;
+  } else {
+    this.entity.x = lerp(this.entity.x, Math.round(this.entity.x / this.size) * this.size, this.rate * dt);
+  }
+}
+
 var Follow = Object.create(Behavior);
-Follow.update = function (dt) {
+Follow.update = function (dt) {  
   if (this.offset.x !== false)
     this.entity.x = this.target.x + (this.offset.x || 0);
   if (this.offset.y !== false)
     this.entity.y = this.target.y + (this.offset.y || 0);
   if (this.offset.z !== false)
     this.entity.z = this.target.z + (this.offset.z || 0);
+  if (this.offset.angle !== false)
+    this.entity.angle = this.target.angle + (this.offset.angle || 0);
   if (this.target.alive === false) this.entity.alive = false;
 };
 

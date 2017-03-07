@@ -299,3 +299,35 @@ Button.init = function (x, y, w, h, object) {
   this.x = x, this.y = y, this.w = w, this.h = h;
   return this;
 }
+
+var SpriteFont = Object.create(Sprite);
+SpriteFont.characters = ['!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ':', ';', '<', '=', '>', '?', '@', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '[', '\\', ']', '^', '_', '`', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p',  'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '{', '|', '}', '~', 'ƒ'];
+SpriteFont.oldInit = SpriteFont.init;
+SpriteFont.init = function (x, y, sprite, text, options) {
+  this.oldInit(x, y, sprite);
+  this.text = text;
+  this.align = options.align || "left";
+  this.spacing = options.spacing || 0;
+  return this;
+}
+SpriteFont.getX = function (n) {
+  if (this.align == "center") {
+    return this.w * (n - this.text.length / 2) - this.spacing * this.text.length / 2;
+  } else if (this.align == "left") {
+    return this.w * n;
+  } else if (this.align == "right") {
+    return this.w * (n - this.text.length);
+  }
+}
+SpriteFont.draw = function (ctx) {
+  for (var i = 0; i < this.text.length; i++) {
+    var c = this.characters.indexOf(this.text[i]);
+    var x = this.getX(i);
+    if (c != -1) {
+      ctx.drawImage(this.sprite.image, 
+        c * this.sprite.w, 0, 
+        this.sprite.w, this.sprite.h, 
+        Math.round(this.x - this.w / 2) + x + this.spacing * i, this.y - Math.round(this.h / 2), this.w, this.h);          
+    }
+  }
+}
