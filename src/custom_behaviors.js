@@ -1,4 +1,5 @@
 // movement (x,y), size, rate, threshold
+var TileMovement = Object.create(Behavior);
 TileMovement.threshold = 0;
 TileMovement.update = function (dt) {
   if (this.movement.y != 0) {
