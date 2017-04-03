@@ -25,7 +25,15 @@ var Entity = {
 		ctx.save();
 		ctx.translate(this.x, this.y);
 		ctx.translate(this.offset.x, this.offset.y);
+		
+		if (this.origin)
+			ctx.translate(this.origin.x, this.origin.y);
+		
 		ctx.rotate(this.angle);
+
+		if (this.origin)
+			ctx.translate(-this.origin.x, -this.origin.y);
+		
 		if (this.scale !== undefined) {
 			ctx.scale(this.scale, this.scale);
 		}
@@ -328,6 +336,28 @@ SpriteFont.draw = function (ctx) {
         c * this.sprite.w, 0, 
         this.sprite.w, this.sprite.h, 
         Math.round(this.x - this.w / 2) + x + this.spacing * i, this.y - Math.round(this.h / 2), this.w, this.h);          
+    }
+  }
+}
+
+var TileMap = Object.create(Sprite);
+TileMap.oldInit = Sprite.init;
+TileMap.init = function(x, y, sprite, map) {
+	this.oldInit(x, y, sprite);
+  this.behaviors = [];
+  this.map = map;
+  this.w = this.map.length * this.sprite.w;
+  this.h = this.map[0].length * this.sprite.h;
+  return this;
+}
+TileMap.onDraw = function (ctx) {
+	//ctx.fillRect(this.x - this.w / 2, this.y - this.h / 2, this.w, this.h);
+	for (var i = 0; i < this.map.length; i++) {
+  	for (var j = 0; j < this.map[i].length; j++) {
+    	ctx.drawImage(this.sprite.image,
+        this.map[i][j].x * this.sprite.w, this.map[i][j].y * this.sprite.h, 
+        this.sprite.w, this.sprite.h, 
+        Math.round(this.x - this.w / 2 + i * this.sprite.w), this.y - Math.round(this.h / 2) + j * this.sprite.h, this.sprite.w, this.sprite.h);
     }
   }
 }

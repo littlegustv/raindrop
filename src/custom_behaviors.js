@@ -1,15 +1,17 @@
-// movement (x,y), size, rate
-var TileMovement = Object.create(Behavior);
+// movement (x,y), size, rate, threshold
+TileMovement.threshold = 0;
 TileMovement.update = function (dt) {
   if (this.movement.y != 0) {
-    this.entity.y += this.movement.y * this.speed * dt;
+    this.entity.velocity.y = this.movement.y * this.speed;
   } else {
-    this.entity.y = lerp(this.entity.y, Math.round(this.entity.y / this.size) * this.size, this.rate * dt);
+    this.entity.velocity.y = Math.round((Math.round((this.entity.y + sign(this.entity.velocity.y) * this.threshold * this.size)/ this.size) * this.size - this.entity.y)) * (this.rate);
+    if (this.entity.velocity.y == 0) this.entity.y = Math.round(Math.round(this.entity.y / this.size) * this.size);
   }
   if (this.movement.x != 0) {
-    this.entity.x += this.movement.x * this.speed * dt;
+    this.entity.velocity.x = this.movement.x * this.speed;
   } else {
-    this.entity.x = lerp(this.entity.x, Math.round(this.entity.x / this.size) * this.size, this.rate * dt);
+    this.entity.velocity.x = Math.round((Math.round((this.entity.x + sign(this.entity.velocity.x) * this.threshold * this.size)/ this.size) * this.size - this.entity.x)) * (this.rate);
+    if (this.entity.velocity.y == 0) this.entity.y = Math.round(Math.round(this.entity.y / this.size) * this.size);
   }
 }
 
@@ -139,7 +141,11 @@ FadeIn.start = function () {
 //object, field, goal, rate
 var Lerp = Object.create(Behavior);
 Lerp.update = function (dt) {
-  this.object[this.field] = lerp(this.object[this.field], this.goal, this.rate * dt);
+  if (this.field == "angle")
+    this.object[this.field] = lerp_angle(this.object[this.field], this.goal, this.rate * dt);
+  else
+    this.object[this.field] = lerp(this.object[this.field], this.goal, this.rate * dt);
+  if (this.object[this.field] == this.goal && this.callback) this.callback(); 
 };
 
 FadeIn.update = function (dt) {

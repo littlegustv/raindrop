@@ -39,6 +39,7 @@ Accelerate.update = function (dt) {
 
 var Animate = Object.create(Behavior);
 Animate.update = function (dt) {
+	if (this.paused) return;
 	this.entity.frameDelay -= dt;
 	if (this.entity.frameDelay <= 0) {
 		this.entity.frameDelay = this.entity.maxFrameDelay;

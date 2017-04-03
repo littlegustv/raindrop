@@ -1,6 +1,14 @@
 var PI = Math.PI;
 var PI2 = 2 * Math.PI;
 
+function range(min, max) {
+  var arr = [];
+  for (var i = min; i < max; i++) {
+    arr.push(i);
+  }
+  return arr;
+}
+
 function distance(x1, y1, x2, y2) {
   return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
 }
@@ -102,16 +110,16 @@ function distance (x1, y1, x2, y2) {
 
 var DEBUG = false;
 
-var KEYCODES = {
-	37: "left",
-  38: "up",
-  39: "right",
-  40: "down",
-  65: "a",
-  68: "d",
-  83: "s",
-  87: "w",
-  80: "p"
+var KEYCODE = {
+	left: 37,
+  up: 38,
+  right: 39,
+  down: 40,
+  a: 65,
+  d: 68,
+  s: 83,
+  w: 87,
+  p: 80
 };
 
 var Resources = [];
