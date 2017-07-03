@@ -117,7 +117,7 @@ var World = {
     }
   },
   draw: function () {
-    this.ctx.clearRect(0, 0, this.width, this.height);
+    // it is up to the individual scenes to 'clear' or not
     if (this.scene) {
       this.scene.draw(this.ctx);
     }
@@ -169,8 +169,8 @@ var World = {
     }
   },
   setScene: function (n, reload) {
-    if (reload === false) {}
-    else if (this.scenes[n].reload) {
+    if (this.scenes[n].reload || reload === true) {
+      console.log('reloading, supposedly');
       this.scenes[n] = Object.create(Scene).init(this.scenes[n].name, true);
     }
     this.removeEventListeners(this.scene);

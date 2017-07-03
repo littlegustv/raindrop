@@ -62,16 +62,18 @@ var Layer = {
     }
   },
   update: function (dt) {
-    if (this.paused > 0) {
+    this.camera.update(dt);
+    if (this.paused === true) {
+      return;
+    } else if (this.paused > 0) {
       this.paused -= dt;
       return;
     }
-    this.camera.update(dt);
     for (var i = 0; i < this.entities.length; i++) {
       this.entities[i].update(dt);
     }
     for (var i = 0; i < this.entities.length; i++) {
-      this.entities[i].checkCollisions(i, this.entities);
+      this.entities[i].checkCollisions(i + 1, this.entities); // i + 1 instead of i
     }
     for (var i = 0; i < this.entities.length; i++) {
       if (!this.entities[i].alive) {

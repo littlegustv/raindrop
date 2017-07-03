@@ -1,6 +1,4 @@
 var Entity = {
-	velocity: {x: 0, y: 0},
-	offset: {x: 0, y: 0},
 	opacity: 1,
 	angle: 0,
 	alive: true,
@@ -8,14 +6,19 @@ var Entity = {
 	points: 1,
 	// this makes it a CLASS variable, which is maybe not a good idea, since that means unless it is initialized, adding a behavior adds it to ALL objects ofthat class
 	behaviors: [],
-	init: function (x, y, w, h) {
+	instance: function () {
+		this.velocity = {x: 0, y: 0};
+		this.offset = {x: 0, y: 0};
 		this.behaviors = [];
+	},
+	init: function (x, y, w, h) {
+		this.instance();
 		this.x = x, this.y = y;
 		this.h = h || 4, this.w = w || 4;
 		return this;
 	},
-	getX: function () { return this.x },
-	getY: function () { return this.y },
+	getX: function () { return this.x; },
+	getY: function () { return this.y; },
   getBoundX: function () { return Math.floor(this.x - this.w/2); },
   getBoundY: function () { return Math.floor(this.y - this.h/2); },
 	draw: function (ctx) {
@@ -137,33 +140,32 @@ var Entity = {
 
 var Circle =Object.create(Entity);
 Circle.init = function(x, y, radius) {
-	this.behaviors = [];
+	this.instance();
 	this.x = x, this.y = y, this.radius = radius;
 	return this;
-}
+};
 Circle.onDraw = function (ctx) {
 	ctx.moveTo(this.x, this.y);
 	ctx.beginPath();
 	ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, true);
 	ctx.fillStyle = this.color;
 	ctx.fill();
-}
+};
 
 var Sprite = Object.create(Entity);
 Sprite.acceleration = {x: 0, y: 0};
 Sprite.init = function (x, y, sprite) {
-	this.x = x, this.y = y;
-	this.behaviors = [];
+	this.x = x;
+	this.y = y;
+	this.instance();
 	this.offset = {x: 0, y: 0};
 	//this.checkCollision = Collision.doPixelPerfect;
 	if (sprite) {
 		if (sprite.speed) this.addBehavior(Animate);
-		// FIX ME: add multiple animations (see PLATFORMS code)
 		this.sprite = sprite, this.sprite.w = this.sprite.image.width / this.sprite.frames;
 		this.animations = sprite.animations, this.animation = 0, this.sprite.h = this.sprite.image.height / this.animations;
 		this.h = this.sprite.h, this.w = this.sprite.image.width / this.sprite.frames;
 		this.frame = 0, this.maxFrame = this.sprite.frames, this.frameDelay = this.sprite.speed, this.maxFrameDelay = this.sprite.speed;
-		//this.imageData = this.getImageData(buf);
 	}
 	return this;
 };
@@ -217,6 +219,7 @@ Sprite.setFrame = function (frame) {
 var TiledBackground = Object.create(Sprite);
 TiledBackground.superInit = Sprite.init;
 TiledBackground.init = function (x, y, w, h, sprite) {
+	this.instance();
 	if (sprite) {
 		// FIX ME: add multiple animations (see PLATFORMS code)
 		this.sprite = sprite, this.sprite.h = this.sprite.image.height, this.sprite.w = this.sprite.image.width / this.sprite.frames;
@@ -264,6 +267,7 @@ var Text = Object.create(Entity);
 Text.type = "text";
 Text.z = -1;
 Text.init = function (x, y, text, format) {
+	this.instance();
 	this.x = x, this.y = y, this.text = text;
 	this.size = format.size || 40;
 	this.color = format.color || "black";
@@ -283,35 +287,11 @@ Text.onDraw = function (ctx) {
 	ctx.fillText(this.text, this.x, this.y);
 };
 
-var Button = Object.create(Entity);
-Button.behaviors = [];
-Button.family = 'button';
-Button.trigger = function () {};
-Button.hover = function () {};
-Button.check = function (x, y) {
-  if (x > this.x - this.w / 2 && x < this.x + this.w / 2) {
-    if (y > this.y - this.h / 2 && y < this.y + this.h / 2) {
-      return true;
-    }
-  }
-  return false;
-};
-Button.draw = function (ctx) {
-  if (DEBUG) {
-    ctx.fillStyle = "green";
-    ctx.fillRect(this.x - this.w / 2, this.y - this.h / 2, this.w, this.h);
-  }
-}
-Button.init = function (x, y, w, h, object) {
-  this.object = object;
-  this.x = x, this.y = y, this.w = w, this.h = h;
-  return this;
-}
-
 var SpriteFont = Object.create(Sprite);
 SpriteFont.characters = ['!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ':', ';', '<', '=', '>', '?', '@', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '[', '\\', ']', '^', '_', '`', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p',  'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '{', '|', '}', '~', 'ƒ'];
 SpriteFont.oldInit = SpriteFont.init;
 SpriteFont.init = function (x, y, sprite, text, options) {
+	this.instance();
   this.oldInit(x, y, sprite);
   this.text = text;
   this.align = options.align || "left";
@@ -327,7 +307,8 @@ SpriteFont.getX = function (n) {
     return this.w * (n - this.text.length);
   }
 }
-SpriteFont.draw = function (ctx) {
+SpriteFont.draw = Sprite.draw;
+SpriteFont.onDraw = function (ctx) {
   for (var i = 0; i < this.text.length; i++) {
     var c = this.characters.indexOf(this.text[i]);
     var x = this.getX(i);
@@ -338,13 +319,13 @@ SpriteFont.draw = function (ctx) {
         Math.round(this.x - this.w / 2) + x + this.spacing * i, this.y - Math.round(this.h / 2), this.w, this.h);          
     }
   }
-}
+};
 
 var TileMap = Object.create(Sprite);
 TileMap.oldInit = Sprite.init;
 TileMap.init = function(x, y, sprite, map) {
+	this.instance()
 	this.oldInit(x, y, sprite);
-  this.behaviors = [];
   this.map = map;
   this.w = this.map.length * this.sprite.w;
   this.h = this.map[0].length * this.sprite.h;

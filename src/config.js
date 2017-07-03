@@ -1,6 +1,23 @@
 var PI = Math.PI;
 var PI2 = 2 * Math.PI;
 
+var fullscreen = false;
+function requestFullScreen () {
+// we've made the attempt, at least
+  fullscreen = true;
+  console.log('requestingFullScreen');
+  var body = document.documentElement;
+  if (body.requestFullscreen) {
+    body.requestFullscreen();
+  } else if (body.webkitRequestFullscreen) {
+    body.webkitRequestFullscreen();
+  } else if (body.mozRequestFullscreen) {
+    body.mozRequestFullscreen();
+  } else if (body.msRequestFullscreen) {
+    body.msRequestFullscreen();
+  }
+}
+
 function range(min, max) {
   var arr = [];
   for (var i = min; i < max; i++) {
@@ -40,7 +57,9 @@ function short_angle(a1, a2) {
 }
 
 function lerp_angle (a1, a2, rate) {
-  return a1 + short_angle(a1, a2) * rate;
+  var r = a1 + short_angle(a1, a2) * rate;
+  if (Math.abs(r - a2) < 0.01) return a2;
+  else return r;
 }
 
 function choose (array) {
