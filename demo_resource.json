@@ -14,7 +14,7 @@
     {"path": "bicycle.png", "frames": 2, "speed": 0.4, "animations": 1},
     {"path": "ground.png"},
     {"path": "rpg.png", "frames": 11, "animations": 12, "speed": false},
-    {"path": "ghost.png", "frames": 2, "animations": 3, "speed": 0.4},
+    {"path": "ghost.png", "frames": 2, "animations": 5, "speed": 0.4},
     {"path": "levels.json"}
   ],
   "fontFamily": "Visitor"

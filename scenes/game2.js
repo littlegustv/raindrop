@@ -31,6 +31,10 @@ var onStart = function () {
     console.log(e.keyCode);
     if (e.keyCode == KEYCODE.escape) {
       gameWorld2.setScene(1);
+    } else if (e.keyCode == KEYCODE.a) {
+      s.ghost.animation = 0;
+    } else if (e.keyCode == KEYCODE.s) {
+      s.ghost.animation = 4;
     }
   };
 
@@ -38,9 +42,9 @@ var onStart = function () {
     e.x = e.x + s.fg.camera.x;
     e.y = e.y + s.fg.camera.y;
     if (Math.abs(e.y - s.ghost.y) > Math.abs(e.x - s.ghost.x)) {
-      s.ghost.animation = e.y > s.ghost.y ? 2 : 1;
+      s.ghost.animation = e.y > s.ghost.y ? 3 : 2;
     } else {
-      s.ghost.animation = ((s.ghost.mirrored && e.x > s.ghost.x) || (!s.ghost.mirrored && e.x < s.ghost.x)) ? 2 : 0;
+      s.ghost.animation = ((s.ghost.mirrored && e.x > s.ghost.x) || (!s.ghost.mirrored && e.x < s.ghost.x)) ? 3 : 1;
     }
     s.ghost.cursor.angle = Math.round(angle(s.ghost.x, s.ghost.y, e.x, e.y) / (PI / 2)) * PI / 2;
   };
@@ -59,7 +63,7 @@ var onStart = function () {
 
 };
 
-var onUpdate = function (dt) {
+var onUpdate = function (dt) {  
 };
 
 var onEnd = function () {
