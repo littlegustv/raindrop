@@ -13,7 +13,7 @@ var onStart = function () {
   fg.add(road);
 
   this.onKeyDown = function (e) {
-    gameWorld2.setScene(1);
+    gameWorld2.setScene(0);
   };
 
   var ll = this.addLayer(Object.create(Layer).init(gameWorld2.width, gameWorld2.height));

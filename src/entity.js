@@ -342,3 +342,27 @@ TileMap.onDraw = function (ctx) {
     }
   }
 }
+
+// from Tiled map editor
+var TiledMap = Object.create(Sprite);
+TiledMap.oldInit = Sprite.init;
+TiledMap.init = function (x, y, sprite, data) {
+	this.instance();
+	this.oldInit(x, y, sprite);
+	this.data = data;
+	this.w = this.data.width * this.sprite.w;
+	this.h = this.data.height * this.sprite.h;
+	return this;
+};
+TiledMap.onDraw = function (ctx) {
+	for (var i = 0; i < this.data.width; i++) {
+		for (var j = 0; j < this.data.height; j++) {
+			var d = this.data.data[i + j * this.data.width];
+			if (d !== 0) {
+				d = d - 1;
+				ctx.drawImage(this.sprite.image, this.sprite.w * (d % this.sprite.frames), this.sprite.h * Math.floor(d / this.sprite.frames), this.sprite.w, this.sprite.h,
+					Math.round(this.x - this.w / 2 + i * this.sprite.w), this.y - Math.round(this.h / 2) + j * this.sprite.h, this.sprite.w, this.sprite.h);				
+			}
+		}
+	}
+};

@@ -138,7 +138,10 @@ var KEYCODE = {
   d: 68,
   s: 83,
   w: 87,
-  p: 80
+  p: 80,
+  escape: 27,
+  enter: 13,
+  space: 32
 };
 
 var Resources = [];

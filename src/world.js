@@ -285,6 +285,15 @@ var World = {
         };
         request.send();
       }
+      else if (ext == ".json") {
+        var request = new XMLHttpRequest();
+        request.open("GET", "res/" + res, true);
+        request.onload = function () {
+          Resources[name] = JSON.parse(request.response);
+          w.progressBar();
+        };
+        request.send();
+      }
     }
   },
   loadOGG: function (res, name) {

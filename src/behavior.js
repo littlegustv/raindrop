@@ -2,7 +2,7 @@ var Behavior = {
 	init: function (entity, config) {
 		this.entity = entity;
 		this.started = false;
-		for (c in config) {
+		for (var c in config) {
 			this[c] = config[c];
 		}
 		return this;
@@ -24,7 +24,8 @@ var Behavior = {
 var Velocity = Object.create(Behavior);
 Velocity.update = function (dt) {
 	this.entity.x += dt * this.entity.velocity.x;
-	this.entity.y += dt * this.entity.velocity.y;	
+	this.entity.y += dt * this.entity.velocity.y;
+	this.entity.angle += dt * this.entity.velocity.angle || 0;
 };
 
 var Accelerate = Object.create(Behavior);
@@ -44,6 +45,9 @@ Animate.update = function (dt) {
 	if (this.entity.frameDelay <= 0) {
 		this.entity.frameDelay = this.entity.maxFrameDelay;
 		this.entity.frame = (this.entity.frame + 1) % this.entity.maxFrame;
+		if (this.entity.frame == this.entity.maxFrame - 1 &&  this.onEnd) {
+			this.onEnd();
+		}
 	}
 };
 

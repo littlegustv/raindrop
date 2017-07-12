@@ -65,25 +65,19 @@ var Scene = {
   },
 	draw: function (ctx) {
     for (var i = 0; i < this.layers.length; i++) {
-      this.layers[i].draw(ctx);
-      ctx.drawImage(this.layers[i].canvas, 0, 0);
+      if (this.layers[i].active)
+      {
+        this.layers[i].draw(ctx);
+        ctx.drawImage(this.layers[i].canvas, 0, 0);
+      }
     }
-	},
+  },
 	update: function (dt) {
-		// update
-		this.time += dt;
-		for (var i = 0; i < this.layers.length; i++) {
-			this.layers[i].update(dt);
-		}
-		/*for (var i = 0; i < this.entities.length; i++) {
-			this.entities[i].checkCollisions(i, this.entities);
-		}*/
-		this.onUpdate(dt);
-		// clean up
-		/*for (var i = 0; i < this.entities.length; i++) {
-			if (!this.entities[i].alive) {
-				this.entities.splice(i, 1);
-			}
-		}*/
-	}
+    this.time += dt;
+    for (var i = 0; i < this.layers.length; i++) {
+      if (this.layers[i].active)
+        this.layers[i].update(dt);
+    }
+    this.onUpdate(dt);
+  }
 };

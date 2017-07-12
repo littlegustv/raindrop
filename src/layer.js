@@ -1,15 +1,16 @@
 var Layer = {
   init: function (w, h, camera) {
-    this.paused = 0;
+    this.paused = 0, this.active = true;
     if (camera) {
       this.camera = camera;
     } else {
       this.camera = Object.create(Camera).init(0,0);
     }
+    this.bg = "white";
     this.entities = [];
     this.canvas = document.createElement('canvas');
     this.canvas.width = w, this.canvas.height = h;
-    this.ctx = this.canvas.getContext('2d');
+    this.ctx = this.canvas.getContext('2d');    
     // is all of this neccessary?
     this.ctx.mozImageSmoothingEnabled = false;
     this.ctx.webkitImageSmoothingEnabled = false;
@@ -35,8 +36,16 @@ var Layer = {
       this.entities.splice(index, 1);
     }
   },
+  drawOrder: function () {
+    var t = this;
+    return this.entities.sort(function (a, b) { 
+      if (a.z && b.z && b.z !== a.z) return a.z - b.z;
+      else return t.entities.indexOf(a) - t.entities.indexOf(b);
+    });
+  },
   draw: function (ctx) {
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.fillStyle = this.bg;
+    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     this.ctx.save();
     this.camera.draw(this.ctx);
 
