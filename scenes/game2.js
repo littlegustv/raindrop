@@ -4,8 +4,17 @@ var onStart = function () {
   this.fg = this.addLayer(Object.create(Layer).init(gameWorld2.width, gameWorld2.height));
   
   for(var i = 0; i < Resources.levels.layers.length; i++) {
-    var l = this.fg.add(Object.create(TiledMap).init(12 * 16, 12 * 16, Resources.rpg, Resources.levels.layers[i]));
-    l.z = i;
+    if (Resources.levels.layers[i].name == "Solids") {
+      for (var j = 0; j < Resources.levels.layers[i].objects.length; j++) {
+        var o = Resources.levels.layers[i].objects[j];
+        var solid = this.fg.add(Object.create(Entity).init(o.x + o.width / 2, o.y + o.height / 2, o.width, o.height));
+        solid.setCollision(Polygon);
+        solid.opacity = 0;
+      }
+    } else {
+      var l = this.fg.add(Object.create(TiledMap).init(12 * 16, 12 * 16, Resources.rpg, Resources.levels.layers[i]));
+      l.z = i;
+    }
   }
 
   this.ghost = this.fg.add(Object.create(Sprite).init(40, 40, Resources.ghost));
@@ -54,7 +63,7 @@ var onStart = function () {
     if (s.ghost.stopped) {
       var field = Math.abs(e.y - s.ghost.y) > Math.abs(e.x - s.ghost.x) ? "y" : "x";
       s.ghost.lerp.field = field;
-      s.ghost.lerp.goal = e[field] > s.ghost[field] ? s.ghost[field] + 64 : s.ghost[field] - 64;
+      s.ghost.lerp.goal = e[field] > s.ghost[field] ? s.ghost[field] + 32 : s.ghost[field] - 32;
       s.ghost.lerp.origin = s.ghost[field];
       s.ghost.stopped = false;
       s.ghost.velocity[field] = e[field] - s.ghost[field];
