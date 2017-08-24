@@ -30,12 +30,12 @@ PixelPerfect.onStart = function (object) {
 					object.ig = ctx.getImageData(0, 0, object.w, object.h);
 					object.imageData = object.ig.data;
 					object.x = x, object.y = y, object.opacity = opacity;
-		   			return object.imageData;
+					return object.imageData;
 				}
 				else {
 					return object.imageData;
 				}
-	  };
+		};
 	}
 };
 PixelPerfect.onCheck = function (object, other) {
@@ -63,8 +63,8 @@ PixelPerfect.onCheck = function (object, other) {
 	
 /**					************************					**/
 /**					Compare in overlap range					**/
-/**					(Pixel by pixel, if not 					**/
-/**					transparent i.e. 255)   					**/
+/**					(Pixel by pixel, if not						**/
+/**					transparent i.e. 255)							**/
 /**					************************					**/
 
 	for (var j = 0; j < maxY - minY; j++)
@@ -75,8 +75,7 @@ PixelPerfect.onCheck = function (object, other) {
 				mx = ((minX - m.x) + i) * 4 + 3;
 			var ny = ((minY - n.y) + j) * n.w * 4,
 				nx = ((minX - n.x) + i) * 4 + 3;
-			if (m_data[my + mx] != 0 && n_data[ny + nx] != 0)
-			{
+			if (m_data[my + mx] !== 0 && n_data[ny + nx] !== 0) {
 				return true;
 			}
 		}
@@ -114,7 +113,7 @@ Polygon.onStart = function (object) {
 			result.push({x: x, y: y});
 		}
 		return result;
-	}
+	};
 	object.getAxes = function () {
 		var result = [];
 		var v = this.getVertices();
@@ -125,7 +124,7 @@ Polygon.onStart = function (object) {
 			result.push({x: -y / magnitude, y: x / magnitude});
 		}
 		return result;
-	}
+	};
 };
 
 Polygon.onCheck = function (o1, o2) {
@@ -150,26 +149,7 @@ Polygon.onCheck = function (o1, o2) {
 
 		if (!overlap(p1, p2)) return false;
 	}
-
-	// line between center point of the two objects
-	/*
-	var s_a = {x: (o1.x - o2.x) , y: (o1.y - o2.y)}
-	var max = 0, index = 0;
-
-	for (var i = 0; i < v2.length; i++) {
-		var p = dot(s_a, v2[i]);
-		if (p > max) {
-			max = p;
-			index = i;
-		}
-	}
-
-	var v = {x: v2[index].x - o2.x, y: v2[index].y - o2.y};
-
-	var proj = (dot(v, s_a) / dot(s_a, s_a));
-	var projection = {x: proj * s_a.x, y: proj * s_a.y};*/
-
-	return true;//distance(0, 0, projection.x, projection.y);
+	return true;
 }
 
 
@@ -177,6 +157,7 @@ var Collisions = {
 	Box: Box
 }
 
+// fix me: redo handlecollisions generalls to not need object & other, just other
 var HandleCollision = {
 	handleSolid: function (object, other) { 
 		if (other.solid) {

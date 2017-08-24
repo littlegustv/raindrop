@@ -2,11 +2,11 @@
   "scale": 2,
   "scenes": [
     {
-      "name": "game2",
+      "name": "game2.js",
       "reload": true
     },
     {
-      "name": "game",
+      "name": "game.js",
       "reload": true
     }    
   ],

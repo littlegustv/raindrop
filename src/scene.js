@@ -1,37 +1,27 @@
 var Scene = {
 	resourceCount: 1,
 	resourceLoadCount: 0,
-	init: function (name, file) {
+	init: function (name) {
 		this.time = 0;
-		this.name = name;
 		this.layers = [];
-		if (file) {
-			this.loadBehavior(this.name + ".js");
+    this.name = name;
+		if (name !== undefined && name.indexOf('.js') !== -1) {
+			this.loadBehavior(name);
 		}
 		return this;
 	},
 	onStart: function () {},
 	onUpdate: function () {},
 	onEnd: function () {},
-	addLayer: function (layer) {
+	add: function (layer) {
 		this.layers.push(layer);
 		return layer;
 	},
-	add: function (e) {
-		if (this.layers.length <= 0) console.log('this scene has no layers.');
-		else {
-			var layer = e.layer || this.layers[0];
-			layer.add(e);
-		}
-		return e;
-	},
-	remove: function (e) {
-		if (this.layers.length <= 0) console.log('this scene has no layers.');
-		else {
-			var layer = e.layer || this.layers[0];
-			layer.remove(e);
-		}
-	},
+	remove: function (layer) {
+    if (this.layers.indexOf(layer) !== -1) {
+      this.layers.splice(this.layers.indexOf(layer), 1);
+    }
+  },
 	loadProgress: function () {
 		this.resourceLoadCount += 1;
 		if (this.resourceLoadCount >= this.resourceCount) {
@@ -39,7 +29,7 @@ var Scene = {
 			//this.onStart();
 		}
 	},
-	loadBehavior: function (script) {
+	loadBehavior: function (script) { // console.log('warning: might be problems here in more complcaited examples...') -> adding script before document is loaded, etc.
     var s = document.createElement("script");
     s.type = "text/javascript";
     s.src = "scenes/" + script;

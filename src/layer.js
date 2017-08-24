@@ -1,6 +1,6 @@
 var Layer = {
   init: function (w, h, camera) {
-    this.paused = 0, this.active = true;
+    this.paused = 0; this.active = true;
     if (camera) {
       this.camera = camera;
     } else {
@@ -9,8 +9,8 @@ var Layer = {
     this.bg = "white";
     this.entities = [];
     this.canvas = document.createElement('canvas');
-    this.canvas.width = w, this.canvas.height = h;
-    this.ctx = this.canvas.getContext('2d');    
+    this.canvas.width = w; this.canvas.height = h;
+    this.ctx = this.canvas.getContext('2d');
     // is all of this neccessary?
     this.ctx.mozImageSmoothingEnabled = false;
     this.ctx.webkitImageSmoothingEnabled = false;
@@ -35,10 +35,11 @@ var Layer = {
     if (e != -1) {
       this.entities.splice(index, 1);
     }
+    return e;
   },
-  drawOrder: function () {
+  drawOrder: function () { // fix me: replace with new draworder method
     var t = this;
-    return this.entities.sort(function (a, b) { 
+    return this.entities.sort(function (a, b) {
       if (a.z && b.z && b.z !== a.z) return a.z - b.z;
       else return t.entities.indexOf(a) - t.entities.indexOf(b);
     });
@@ -49,18 +50,14 @@ var Layer = {
     this.ctx.save();
     this.camera.draw(this.ctx);
 
-    if (this.drawOrder) {
-      var entities = this.drawOrder();
-    } else {
-      var entities = this.entities;
-    }
+    var entities = this.drawOrder();
 
     for (var i = 0; i < entities.length; i++) {
       entities[i].draw(this.ctx);
     }
     this.ctx.restore();
   },
-  onButton: function (x, y) {
+  button: function (x, y) { // fix me; use 'overlap' or between functions? or use collisions?
     for (var i = 0; i < this.entities.length; i++) {
       if (this.entities[i].family == 'button') {
         var e = this.entities[i];

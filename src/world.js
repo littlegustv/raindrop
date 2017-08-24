@@ -3,8 +3,8 @@ var AudioContext = window.AudioContext || window.webkitAudioContext;
 // creates window
 var World = {
   events: ["onClick", "onMouseMove", "onMouseDown", "onMouseUp", "onKeyDown", "onKeyUp", "onKeyPress", "onTouchStart", "onTouchEnd", "onTouchCancel", "onTouchMove"],
-  init: function (width, height, gameinfo) {
-    this.height = height, this.width = width;
+  init: function (w, h, gameinfo) {
+    this.h = h; this.w = w;
     var t = this;
     this.scenes = [];
     this.time = 0;
@@ -12,29 +12,40 @@ var World = {
     this.scene = undefined;
     this.paused = false;
     this.muted = false;
+    this.resource_path = "res/";
     // does this work for JSFIDDLE?  I don't think it does!
-    window.addEventListener('DOMContentLoaded', function (e) {
-      if (gameinfo) {
-        t.loadGameInfo(gameinfo);
-      } else {
-        t.createCanvas();
-        t.createDebug();
-        t.start();
-      }
-    });
+    t.createCanvas();
+    t.createDebug();
+    if (gameinfo) {
+      t.loadGameInfo(gameinfo);
+    }
     return this;
+  },
+  add: function (scene) {
+    this.scenes.push(scene);
+    return scene;
   },
   start: function () {
     this.beginTime();
     this.step();
-    if (!this.gameInfo) {
-      this.scene.onStart();      
+
+    if (document && document.body) {
+      document.body.appendChild(this.canvas);
+      document.body.appendChild(this.debug);
+      this.scene.onStart();
+    } else {
+      var t = this;
+      window.addEventListener('DOMContentLoaded', function (e) {
+        document.body.appendChild(t.canvas);
+        document.body.appendChild(t.debug);
+        t.scene.onStart();
+      });
     }
   },
   step: function () {
     var t = this;
     if (this.paused) {
-      window.requestAnimationFrame( function () { t.step() });
+      window.requestAnimationFrame( function () { t.step(); });
       return;
     }
     var newTime = new Date();
@@ -79,12 +90,11 @@ var World = {
   },
   createCanvas: function () {
     this.canvas = document.createElement("canvas");
-    this.canvas.height = this.height, this.canvas.width = this.width;
+    this.canvas.height = this.h, this.canvas.width = this.w;
     if (this.gameInfo && this.gameInfo.scale) {
-      this.canvas.style.height = this.gameInfo.scale * this.height + "px";
-      this.canvas.style.width = this.gameInfo.scale * this.width + "px";
+      this.canvas.style.height = this.gameInfo.scale * this.h + "px";
+      this.canvas.style.width = this.gameInfo.scale * this.w + "px";
     }
-    document.body.appendChild(this.canvas);
     //this.canvas.fullscreenElement ();
     this.ctx = this.canvas.getContext("2d");
     
@@ -108,7 +118,6 @@ var World = {
   createDebug: function () {
     this.debug = document.createElement("div");
     this.debug.setAttribute("class", "debug");
-    document.body.appendChild(this.debug);
   },
   update: function (dt) {
     debug.fps = Math.floor(100 / dt) / 100;
@@ -123,19 +132,17 @@ var World = {
     }
   },
   progressBar: function () {
-    var n = Math.floor((this.width - 50) / this.resourceCount);
+    var n = Math.floor((this.w - 50) / this.resourceCount);
     this.ctx.fillStyle = "black";
     this.ctx.fillRect(25 + this.resourceLoadCount * n, this.height / 2 - 12, n, 25);
     this.resourceLoadCount += 1;
     var t = this;
     if (this.resourceLoadCount >= this.resourceCount) {
-      this.loadScenes();
-      this.setScene(0);
-      if (this.scene) {
-        setTimeout( function () {
-          t.start();
-        }, 100);
-      } else {
+      if (document && document.body) this.loadScenes();
+      else {
+        window.addEventListener('DOMContentLoaded', function (e) {
+          t.loadScenes();
+        });
       }
     }
   },
@@ -161,12 +168,16 @@ var World = {
   loadScenes: function () {
     // scene data is just the name of the scenes, which implies their script file name
     var sceneData = this.gameInfo.scenes;
-    for (var i = 0; i < sceneData.length; i++) {
-      var sceneName = sceneData[i].name;
-      var s = Object.create(Scene).init(sceneName, true);
-      s.reload = sceneData[i].reload || false;
-      this.scenes.push(s);
+    if (!sceneData) {} else {
+      for (var i = 0; i < sceneData.length; i++) {
+        var sceneName = sceneData[i].name;
+        var s = Object.create(Scene).init(sceneName, true);
+        s.reload = sceneData[i].reload || false;
+        this.scenes.push(s);
+      }      
     }
+    this.setScene(0);
+    this.start();
   },
   setScene: function (n, reload) {
     if (this.scenes[n].reload || reload === true) {
@@ -176,6 +187,7 @@ var World = {
     this.removeEventListeners(this.scene);
     this.scene = this.scenes[n];
     this.addEventListeners(this.scene);
+    return this.scene;
   },
   removeEventListeners: function (scene) {
     if (scene && scene.ready) {
@@ -249,25 +261,25 @@ var World = {
     this.resourceLoadCount = 0;
     this.resourceCount = this.gameInfo.resources.length;
     this.ctx.fillStyle = "gray";
-    this.ctx.fillRect(this.width / 2 - 25 * this.resourceCount + i * 50, this.height / 2 - 12, 50, 25);      
-    this.ctx.fillText("loading...", this.width / 2, this.height / 2 - 50);
+    this.ctx.fillRect(this.w / 2 - 25 * this.resourceCount + i * 50, this.h / 2 - 12, 50, 25);      
+    this.ctx.fillText("loading...", this.w / 2, this.h / 2 - 50);
     var w = this;
 
     for (var i = 0; i < this.gameInfo.resources.length; i++ ) {
       var res = this.gameInfo.resources[i].path;
       var e = res.indexOf(".");
-      var name = res.substring(0, e);
+      var name = this.gameInfo.resources[i].name !== undefined ? this.gameInfo.resources[i].name : res.substring(0, e);
       var ext = res.substring(e, res.length);
       if (ext == ".png") {
         Resources[name] = {image: new Image(), frames: this.gameInfo.resources[i].frames || 1, speed: this.gameInfo.resources[i].speed || 1, animations: this.gameInfo.resources[i].animations || 1 };
-        Resources[name].image.src = "res/" + res;
+        Resources[name].image.src = this.resource_path + res;
         Resources[name].image.onload = function () {
           w.progressBar();
-        }
+        };
       }
       else if (ext == ".ogg") {
         this.loadOGG(res, name);
-/*        Resources[name] = {sound: new Audio("res/" + res, streaming=false)};
+/*        Resources[name] = {sound: new Audio(this.resource_path + res, streaming=false)};
         w.progressBar();
         Resources[name].sound.onload = function () {
           console.log("loaded sound");
@@ -278,7 +290,7 @@ var World = {
       }
       else if (ext == ".js") {
         var request = new XMLHttpRequest();
-        request.open("GET", "res/" + res, true);
+        request.open("GET", this.resource_path + res, true);
         request.onload = function () {
           w.sceneInfo = request.response;
           w.progressBar();
@@ -287,7 +299,7 @@ var World = {
       }
       else if (ext == ".json") {
         var request = new XMLHttpRequest();
-        request.open("GET", "res/" + res, true);
+        request.open("GET", this.resource_path + res, true);
         request.onload = function () {
           Resources[name] = JSON.parse(request.response);
           w.progressBar();
@@ -308,13 +320,13 @@ var World = {
     }
     //console.log("NEW", res);
     if (!AudioContext) {
-      Resources[name] = new Audio("res/" + res, streaming=false);
-      //Resources[name].src = "res/" + res;
+      Resources[name] = new Audio(this.resource_path + res, streaming=false);
+      //Resources[name].src = this.resource_path + res;
       w.progressBar();
       return;
     }
     var request = new XMLHttpRequest();
-    request.open('GET', "res/" + res, true);
+    request.open('GET', this.resource_path + res, true);
     request.responseType = 'arraybuffer';
 
     var w = this;

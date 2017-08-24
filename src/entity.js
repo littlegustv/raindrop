@@ -7,20 +7,32 @@ var Entity = {
 	// this makes it a CLASS variable, which is maybe not a good idea, since that means unless it is initialized, adding a behavior adds it to ALL objects ofthat class
 	behaviors: [],
 	instance: function () {
+		this.x = 0; this.y = 0;
 		this.velocity = {x: 0, y: 0};
 		this.offset = {x: 0, y: 0};
 		this.behaviors = [];
 	},
-	init: function (x, y, w, h) {
+	init: function () {
 		this.instance();
-		this.x = x, this.y = y;
-		this.h = h || 4, this.w = w || 4;
+		this.h = 4; this.w = 4;
 		return this;
 	},
-	getX: function () { return this.x; },
-	getY: function () { return this.y; },
-  getBoundX: function () { return Math.floor(this.x - this.w/2); },
-  getBoundY: function () { return Math.floor(this.y - this.h/2); },
+	set: function (key, value) {
+		// single pair
+		if (value !== undefined) {
+			k = {};
+			k[key] = value;
+		} else {
+			k = key;
+		}
+		// hash
+		for (var i in k) {
+			this[i] = k[i];
+		}
+		return this;
+	},
+	getBoundX: function () { return Math.floor(this.x - this.w/2); }, // deprecate
+  getBoundY: function () { return Math.floor(this.y - this.h/2); }, // deprecate (used only in PixelPerfect and handleSolid)
 	draw: function (ctx) {
 		for (var i = 0; i < this.behaviors.length; i++) {
 			this.behaviors[i].draw(ctx);
@@ -60,7 +72,7 @@ var Entity = {
 		this.drawDebug(ctx);
 	},
 	drawDebug: function (ctx) {
-		return
+		return;
 	},
 	onDraw: function (ctx) {
 		ctx.fillStyle = this.color || "black";
@@ -71,7 +83,7 @@ var Entity = {
 			this.vertices = vertices.map( function (v) {
 				var _d = Math.sqrt(Math.pow(v.x, 2) + Math.pow(v.y, 2));
 				var _theta = Math.atan2(v.y, v.x);
-				return {d: _d, theta: _theta}
+				return {d: _d, theta: _theta};
 			});
 		} else {
 			var d = Math.sqrt(Math.pow(this.w, 2) + Math.pow(this.h, 2)) / 2;
@@ -84,27 +96,23 @@ var Entity = {
 			];
 		}
 	},
-	offsetVertices: function () {
-		for (var i = 0; i < this.vertices.length; i++) {
-			this.vertices[i].x += this.offset.x;
-			this.vertices[i].y += this.offset.y;
-		}
-	},
-	setCollision: function (collision) {
+	setCollision: function (collision) {  // fix me: can this be included in standard 'set' ?
 		this.collision = Object.create(collision);
 		this.collision.onStart(this);
+		return this.collision;
 	},
-	addBehavior: function (name, config) {
+	add: function (name, config) {  // you can only add behaviors to entities, no?
 		var b = Object.create(name).init(this, config);
 		this.behaviors.push(b);
 		return b;
 	},
-	removeBehavior: function (obj) {
+	remove: function (obj) {
 		var i = this.behaviors.indexOf(obj);
 		obj.end();
 		this.behaviors.splice(i, 1);
+		return b; // should this chain the behavior or the entity?
 	},
-	start: function () {
+	start: function () { // fix me: when should this be triggered (right now it NEVER is)
 		for (var i = 0; i < this.behaviors.length; i++) {
 			this.behaviors[i].start();
 		}
@@ -114,8 +122,7 @@ var Entity = {
 			this.behaviors[i].end();
 		}
 	},
-//	checkCollision: function (obj) { return false },
-	checkCollisions: function (start, entities) { 
+	checkCollisions: function (start, entities) {
 		if (!this.collision) return;
 		for (var i = start; i < entities.length; i++) {
 			if (this == entities[i]) {}
@@ -127,21 +134,17 @@ var Entity = {
 			}
 		}
 	},
-//	handleCollision: function ( other ) {
-//	},
 	update: function (dt) {
 		for (var i = 0; i < this.behaviors.length; i++) {
 			this.behaviors[i].update(dt);
 		}
-//		this.x += dt * this.velocity.x;
-//		this.y += dt * this.velocity.y;
 	}
 };
 
 var Circle =Object.create(Entity);
-Circle.init = function(x, y, radius) {
+Circle.init = function() {
 	this.instance();
-	this.x = x, this.y = y, this.radius = radius;
+	this.radius = 5;
 	return this;
 };
 Circle.onDraw = function (ctx) {
@@ -153,26 +156,20 @@ Circle.onDraw = function (ctx) {
 };
 
 var Sprite = Object.create(Entity);
-Sprite.acceleration = {x: 0, y: 0};
-Sprite.init = function (x, y, sprite) {
-	this.x = x;
-	this.y = y;
+Sprite.init = function (sprite) {
 	this.instance();
-	this.offset = {x: 0, y: 0};
-	//this.checkCollision = Collision.doPixelPerfect;
+	this.offset = {x: 0, y: 0}; // fix me: figure out origin, offset, etc.
 	if (sprite) {
-		if (sprite.speed) this.addBehavior(Animate);
-		this.sprite = sprite, this.sprite.w = this.sprite.image.width / this.sprite.frames;
-		this.animations = sprite.animations, this.animation = 0, this.sprite.h = this.sprite.image.height / this.animations;
-		this.h = this.sprite.h, this.w = this.sprite.image.width / this.sprite.frames;
-		this.frame = 0, this.maxFrame = this.sprite.frames, this.frameDelay = this.sprite.speed, this.maxFrameDelay = this.sprite.speed;
+		if (sprite.speed) this.add(Animate);
+		this.sprite = sprite; this.sprite.w = this.sprite.image.width / this.sprite.frames;
+		this.animations = sprite.animations; this.animation = 0; this.sprite.h = this.sprite.image.height / this.animations;
+		this.h = this.sprite.h; this.w = this.sprite.image.width / this.sprite.frames;
+		this.frame = 0; this.maxFrame = this.sprite.frames; this.frameDelay = this.sprite.speed; this.maxFrameDelay = this.sprite.speed;
 	}
 	return this;
 };
 Sprite.onDraw = function (ctx) {
-	ctx.drawImage(this.sprite.image, 
-		this.frame * this.sprite.w, this.animation * this.sprite.h, 
-		this.sprite.w, this.sprite.h, 
+	ctx.drawImage(this.sprite.image, this.frame * this.sprite.w, this.animation * this.sprite.h, this.sprite.w, this.sprite.h,
 		Math.round(this.x - this.w / 2), this.y - Math.round(this.h / 2), this.w, this.h);
 };
 Sprite.drawDebug = function (ctx) {
@@ -207,29 +204,26 @@ Sprite.drawDebug = function (ctx) {
 		ctx.lineTo(this.x + 200 * Math.cos(this.angle), this.y + 200 * Math.sin(this.angle));
 		ctx.stroke();
 	}
-}
-Sprite.setFrame = function (frame) {
+};
+Sprite.setFrame = function (frame) {  // cute ;)
 	if (frame == "random") {
 		this.frame = Math.floor(Math.random() * this.maxFrame);
 	} else {
 		this.frame = frame;
 	}
+	return this;
 };
 
 var TiledBackground = Object.create(Sprite);
 TiledBackground.superInit = Sprite.init;
-TiledBackground.init = function (x, y, w, h, sprite) {
+TiledBackground.init = function (sprite) {
 	this.instance();
 	if (sprite) {
-		// FIX ME: add multiple animations (see PLATFORMS code)
-		this.sprite = sprite, this.sprite.h = this.sprite.image.height, this.sprite.w = this.sprite.image.width / this.sprite.frames;
-		this.h = this.sprite.image.height, this.w = this.sprite.image.width / this.sprite.frames;
-		this.frame = 0, this.maxFrame = this.sprite.frames, this.frameDelay = this.sprite.speed, this.maxFrameDelay = this.sprite.speed;
-		//this.imageData = this.getImageData(buf);
+		this.sprite = sprite; this.sprite.h = this.sprite.image.height; this.sprite.w = this.sprite.image.width / this.sprite.frames;
+		this.h = this.sprite.image.height; this.w = this.sprite.image.width / this.sprite.frames;
+		this.frame = 0; this.maxFrame = this.sprite.frames; this.frameDelay = this.sprite.speed; this.maxFrameDelay = this.sprite.speed;
 	}
-	this.x = x, this.y = y;
-  this.w = w, this.h = h;
-  this.behaviors = [];
+  this.w = 320; this.h = 32;
 	return this;
 };
 TiledBackground.onDraw = function (ctx) {
@@ -243,62 +237,46 @@ TiledBackground.onDraw = function (ctx) {
 };
 
 var Camera = Object.create(Entity);
-Camera.to_s = "Camera";
-Camera.scale = 1;
+Camera.init = function (scale) {
+	this.instance();
+	this.scale = 1;
+	return this;
+};
 Camera.draw = function (ctx) {
 	ctx.translate(-this.x,-this.y);
   ctx.scale(this.scale, this.scale);
 };
-Camera.shake = function (n) {
-	if (n == 0) {
-		this.x =  Math.floor(world.player.x - canvas.width/2), 
-		this.y =  0;
-		return;
-	}
-	var c = this;
-	setTimeout(function () {
-		c.x += Math.random() * 10 - 5;
-		c.y += Math.random() * 10 - 5;
-		c.shake(n - 1);
-	}, 10)
-};
 
 var Text = Object.create(Entity);
-Text.type = "text";
-Text.z = -1;
-Text.init = function (x, y, text, format) {
+Text.init = function (text) {
 	this.instance();
-	this.x = x, this.y = y, this.text = text;
-	this.size = format.size || 40;
-	this.color = format.color || "black";
-	this.align = format.align || "center";
-	this.behaviors = [];
+	this.text = text;
+	this.size = 24;
+	this.color = "black";
+	this.align = "center";
+	this.font = "sans-serif";
+	this.weight = "300";
 	return this;
-};
-Text.update = function (dt) {
-	for (var i = 0; i < this.behaviors.length; i++) {
-		this.behaviors[i].update(dt);
-	}
 };
 Text.onDraw = function (ctx) {
 	ctx.textAlign = this.align;
 	ctx.fillStyle = this.color;
-	ctx.font = "900 " + this.size + "px " + "Visitor";
+	ctx.font = this.weight + " " + this.size + "px " + this.font;
 	ctx.fillText(this.text, this.x, this.y);
 };
 
 var SpriteFont = Object.create(Sprite);
 SpriteFont.characters = ['!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ':', ';', '<', '=', '>', '?', '@', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '[', '\\', ']', '^', '_', '`', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p',  'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '{', '|', '}', '~', 'ƒ'];
 SpriteFont.oldInit = SpriteFont.init;
-SpriteFont.init = function (x, y, sprite, text, options) {
+SpriteFont.init = function (sprite, text) {
 	this.instance();
-  this.oldInit(x, y, sprite);
-  this.text = text;
-  this.align = options.align || "left";
-  this.spacing = options.spacing || 0;
+  this.oldInit(sprite);
+  this.x = 70; this.y = 10; this.text = text;
+  this.align = "center";
+  this.spacing = 0;
   return this;
-}
-SpriteFont.getX = function (n) {
+};
+SpriteFont.getX = function (n) { // utility function for letter position
   if (this.align == "center") {
     return this.w * (n - this.text.length / 2) - this.spacing * this.text.length / 2;
   } else if (this.align == "left") {
@@ -306,49 +284,48 @@ SpriteFont.getX = function (n) {
   } else if (this.align == "right") {
     return this.w * (n - this.text.length);
   }
-}
-SpriteFont.draw = Sprite.draw;
+};
+//SpriteFont.draw = Sprite.draw;
 SpriteFont.onDraw = function (ctx) {
   for (var i = 0; i < this.text.length; i++) {
     var c = this.characters.indexOf(this.text[i]);
     var x = this.getX(i);
     if (c != -1) {
-      ctx.drawImage(this.sprite.image, 
-        c * this.sprite.w, 0, 
-        this.sprite.w, this.sprite.h, 
-        Math.round(this.x - this.w / 2) + x + this.spacing * i, this.y - Math.round(this.h / 2), this.w, this.h);          
+      ctx.drawImage(this.sprite.image,
+        c * this.sprite.w, 0,
+        this.sprite.w, this.sprite.h,
+        Math.round(this.x - this.w / 2) + x + this.spacing * i, this.y - Math.round(this.h / 2), this.w, this.h);
     }
   }
 };
 
 var TileMap = Object.create(Sprite);
 TileMap.oldInit = Sprite.init;
-TileMap.init = function(x, y, sprite, map) {
-	this.instance()
-	this.oldInit(x, y, sprite);
-  this.map = map;
+TileMap.init = function(sprite, map) {
+	this.instance();
+	this.oldInit(sprite);
+	this.map = map;
   this.w = this.map.length * this.sprite.w;
   this.h = this.map[0].length * this.sprite.h;
   return this;
-}
+};
 TileMap.onDraw = function (ctx) {
-	//ctx.fillRect(this.x - this.w / 2, this.y - this.h / 2, this.w, this.h);
 	for (var i = 0; i < this.map.length; i++) {
-  	for (var j = 0; j < this.map[i].length; j++) {
-    	ctx.drawImage(this.sprite.image,
-        this.map[i][j].x * this.sprite.w, this.map[i][j].y * this.sprite.h, 
-        this.sprite.w, this.sprite.h, 
+		for (var j = 0; j < this.map[i].length; j++) {
+				ctx.drawImage(this.sprite.image,
+        this.map[i][j].x * this.sprite.w, this.map[i][j].y * this.sprite.h,
+        this.sprite.w, this.sprite.h,
         Math.round(this.x - this.w / 2 + i * this.sprite.w), this.y - Math.round(this.h / 2) + j * this.sprite.h, this.sprite.w, this.sprite.h);
     }
   }
-}
+};
 
 // from Tiled map editor
 var TiledMap = Object.create(Sprite);
 TiledMap.oldInit = Sprite.init;
-TiledMap.init = function (x, y, sprite, data) {
+TiledMap.init = function (sprite, data) {
 	this.instance();
-	this.oldInit(x, y, sprite);
+	this.oldInit(sprite);
 	this.data = data;
 	this.w = this.data.width * this.sprite.w;
 	this.h = this.data.height * this.sprite.h;
@@ -361,7 +338,7 @@ TiledMap.onDraw = function (ctx) {
 			if (d !== 0) {
 				d = d - 1;
 				ctx.drawImage(this.sprite.image, this.sprite.w * (d % this.sprite.frames), this.sprite.h * Math.floor(d / this.sprite.frames), this.sprite.w, this.sprite.h,
-					Math.round(this.x - this.w / 2 + i * this.sprite.w), this.y - Math.round(this.h / 2) + j * this.sprite.h, this.sprite.w, this.sprite.h);				
+					Math.round(this.x - this.w / 2 + i * this.sprite.w), this.y - Math.round(this.h / 2) + j * this.sprite.h, this.sprite.w, this.sprite.h);
 			}
 		}
 	}
