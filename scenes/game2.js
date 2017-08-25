@@ -15,17 +15,14 @@ var onStart = function () {
     }
   }
 
-  this.ghost = this.fg.add(Object.create(Sprite).init(Resources.ghost)).set({x: 40, y: 40, stopped: true});
+  this.ghost = this.fg.add(Object.create(Sprite).init(Resources.ghost)).set({x: 40, y: 40, stopped: true, velocity: {x: 0, y: 0}, opacity: 0.7, z: 4});
   this.ghost.lerp = this.ghost.add(Lerp, {field: "x", goal: this.ghost.x, rate: 4, object: this.ghost, callback: function () {
     this.entity.stopped = true;
   }});
   this.ghost.cursor = this.ghost.add(Cursor, {angle: 0, color: "white"});
   this.ghost.add(Oscillate, {object: this.ghost.offset, field: "y", constant: 1, rate: 5, initial: 0});
   this.ghost.add(Flip);
-  this.ghost.velocity = {x: 0, y: 0};
   this.ghost.setCollision(Polygon);
-  this.ghost.opacity = 0.7;
-  this.ghost.z = 4;
   this.ghost.collision.onHandle = function (object, other) {
     if (object.lerp.goal != object.lerp.origin) {
       object.lerp.goal = object.lerp.origin;
