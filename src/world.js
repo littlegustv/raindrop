@@ -267,7 +267,7 @@ var World = {
 
     for (var i = 0; i < this.gameInfo.resources.length; i++ ) {
       var res = this.gameInfo.resources[i].path;
-      var e = res.indexOf(".");
+      var e = res.lastIndexOf(".");
       var name = this.gameInfo.resources[i].name !== undefined ? this.gameInfo.resources[i].name : res.substring(0, e);
       var ext = res.substring(e, res.length);
       if (ext == ".png") {
