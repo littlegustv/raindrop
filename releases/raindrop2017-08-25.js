@@ -175,11 +175,6 @@ Polygon.onCheck = function (o1, o2) {
 	return true;
 }
 
-
-var Collisions = {
-	Box: Box
-}
-
 // fix me: redo handlecollisions generalls to not need object & other, just other
 var HandleCollision = {
 	handleSolid: function (object, other) { 
