@@ -242,12 +242,12 @@ var World = {
       this.audioContext.gn = this.audioContext.createGain();
       var t = this;
       window.addEventListener("focus", function (e) {
-        if (t.audioContext.resume) t.audioContext.resume();
+        if (t.audioContext && t.audioContext.resume && !this.muted) t.audioContext.resume();
         t.startTime = new Date();
         t.speed = 1;
       });
       window.addEventListener("blur", function (e) {
-        if (t.audioContext.suspend) t.audioContext.suspend();
+        if (t.audioContext && t.audioContext.suspend) t.audioContext.suspend();
         t.speed = 0;
       });
     }
@@ -311,9 +311,9 @@ var World = {
   loadOGG: function (res, name) {
     var w = this;
     // cant play ogg, load mp3
-    if (name == "soundtrack" || name == "soundtrackFast") {
+    /*if (name == "soundtrack" || name == "soundtrackFast") {
       this.progressBar();
-    }
+    }*/
     if (this.audioType.length <= 0) {
       res = res.replace("ogg", "mp3");
       //console.log("replaced?");
@@ -333,7 +333,7 @@ var World = {
     request.onload = function() {
       w.audioContext.decodeAudioData(request.response, function(b) {
         Resources[name] = {buffer: b, play: false};
-        if (name == "soundtrack" || name == "soundtrackFast") {
+        if (false) {
 //          if (AudioContext && Resources.soundtrack && name == "soundtrack") w.musicLoop();
         } else {
           w.progressBar();
@@ -342,8 +342,7 @@ var World = {
     };
     request.send();
   },
-  playSound: function(sound, volume)
-  {
+  playSound: function(sound, volume) {
     if (AudioContext) {
       var volume = volume || 1;
       //console.log(sound);
@@ -352,7 +351,7 @@ var World = {
       source.buffer = buffer;
       
       source.connect(this.audioContext.gn);
-      //this.audioContext.gn.gain.value = volume;
+      this.audioContext.gn.gain.value = volume;
       this.audioContext.gn.connect(this.audioContext.destination);
       source.start(0);
       

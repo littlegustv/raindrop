@@ -54,6 +54,7 @@ var Scene = {
     };
   },
 	draw: function (ctx) {
+    ctx.clearRect(0, 0, gameWorld.width, gameWorld.height); // HERE!
     for (var i = 0; i < this.layers.length; i++) {
       if (this.layers[i].active)
       {

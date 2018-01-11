@@ -110,7 +110,11 @@ var Entity = {
 		var i = this.behaviors.indexOf(obj);
 		obj.end();
 		this.behaviors.splice(i, 1);
-		return b; // should this chain the behavior or the entity?
+		return obj; // should this chain the behavior or the entity?
+	},
+	removeBehavior: function (obj) {
+		console.warn('removeBehavior is Depcrecated: use entity.remove() instead');
+		return this.remove(obj);
 	},
 	start: function () { // fix me: when should this be triggered (right now it NEVER is)
 		for (var i = 0; i < this.behaviors.length; i++) {
@@ -285,7 +289,6 @@ SpriteFont.getX = function (n) { // utility function for letter position
     return this.w * (n - this.text.length);
   }
 };
-//SpriteFont.draw = Sprite.draw;
 SpriteFont.onDraw = function (ctx) {
   for (var i = 0; i < this.text.length; i++) {
     var c = this.characters.indexOf(this.text[i]);

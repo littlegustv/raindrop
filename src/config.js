@@ -11,12 +11,41 @@ function requestFullScreen () {
     body.requestFullscreen();
   } else if (body.webkitRequestFullscreen) {
     body.webkitRequestFullscreen();
-  } else if (body.mozRequestFullscreen) {
-    body.mozRequestFullscreen();
+  } else if (body.mozRequestFullScreen) {
+    body.mozRequestFullScreen();
   } else if (body.msRequestFullscreen) {
     body.msRequestFullscreen();
   }
 }
+
+var EASE = {
+  linear: function (start, end, t) {
+    return start + (end - start) * t;
+  },
+  easeInQuad: function (start, end, t) {
+    return (end - start) * t * t + start;
+  },
+  easeOutQuad: function (start, end, t) {
+    return -(end - start) *(t)*(t-2) + start;
+  },
+  easeOutBounce: function (start, end, t) {
+    var c = end - start;
+    if (t < (1/2.75)) {
+      return c*(7.5625*t*t) + start;
+    } else if (t < (2/2.75)) {
+      return c*(7.5625*(t-=(1.5/2.75))*t + .75) + start;
+    } else if (t < (2.5/2.75)) {
+      return c*(7.5625*(t-=(2.25/2.75))*t + .9375) + start;
+    } else {
+      return c*(7.5625*(t-=(2.625/2.75))*t + .984375) + start;
+    }
+  }
+  // for more, check out: https://github.com/danro/jquery-easing/blob/master/jquery.easing.js
+  // c = change, t = time, d = duration, b = base, x = ?
+  // c -> (end - start)
+  // t / d -> t
+  // b -> b
+};
 
 function range(min, max) {
   var arr = [];

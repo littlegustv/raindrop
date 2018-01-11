@@ -37,12 +37,20 @@ var Layer = {
     }
     return e;
   },
-  drawOrder: function () { // fix me: replace with new draworder method
-    var t = this;
-    return this.entities.sort(function (a, b) {
-      if (a.z && b.z && b.z !== a.z) return a.z - b.z;
-      else return t.entities.indexOf(a) - t.entities.indexOf(b);
-    });
+  drawOrder: function () {
+      var t = this;
+      return this.entities.sort(function (a, b) {
+        if (a.z < b.z) return -1;
+        else if (a.z === b.z) {
+          if (a.y < b.y) return -1;
+          else if (a.y === b.y) {
+            if (a.x < b.x) return -1;
+            else return 1;
+          }
+          else return 1;
+        }
+        else return 1;
+      });
   },
   draw: function (ctx) {
     this.ctx.fillStyle = this.bg;
@@ -78,12 +86,13 @@ var Layer = {
     for (var i = 0; i < this.entities.length; i++) {
       this.entities[i].update(dt);
     }
-    for (var i = 0; i < this.entities.length; i++) {
+    /*for (var i = 0; i < this.entities.length; i++) {
       this.entities[i].checkCollisions(i + 1, this.entities); // i + 1 instead of i
-    }
-    for (var i = 0; i < this.entities.length; i++) {
+    }*/
+    for (var i = this.entities.length - 1; i >= 0; i--) {
       if (!this.entities[i].alive) {
         this.entities[i].end();
+        delete this.entities[i];
         this.entities.splice(i, 1);
       }
     }

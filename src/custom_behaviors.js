@@ -1,3 +1,31 @@
+// frames: [{time, state: {x, y, etc.}}], loop
+var KeyFrame = Object.create(Behavior);
+KeyFrame.update = function (dt) {
+  if (this.time === undefined) this.time = 0;
+  this.time += dt;
+  for (var i = this.frames.length - 1; i >= 0; i--) {
+    if (this.time >=  this.frames[i].time) {
+      var frame = this.frames[i];
+      var next = this.frames[i + 1];
+      break;
+    }
+  }
+  if (next) {
+    var t = (this.time - frame.time) / (next.time - frame.time);
+    for (var key in frame.state) {
+      if (next.state[key] !== undefined) {
+        this.entity[key] = EASE[this.ease](frame.state[key], next.state[key], t);
+      }
+    }
+  } else {
+    if (this.loop) this.time = 0;
+    else this.entity.removeBehavior(this);
+  }
+};
+KeyFrame.interpolate = function (start, end, t) {
+  return (1 - t) * start + t * end
+};
+
 // movement (x,y), size, rate, threshold
 var TileMovement = Object.create(Behavior);
 TileMovement.threshold = 0;
@@ -118,8 +146,18 @@ Delay.update = function (dt) {
     this.callback();
     this.entity.removeBehavior(this);
   }
-}
+};
 
+var Periodic = Object.create(Behavior);
+Periodic.update = function (dt) {
+  if (this.time === undefined) this.time = 0;
+  this.time += dt;
+
+  if (this.time >= this.period) {
+    this.callback();
+    this.time = 0;
+  }
+};
 
 var FadeOut = Object.create(Behavior);
 FadeOut.start = function () {
@@ -142,11 +180,24 @@ FadeIn.start = function () {
 //object, field, goal, rate
 var Lerp = Object.create(Behavior);
 Lerp.update = function (dt) {
-  if (this.field == "angle")
-    this.object[this.field] = lerp_angle(this.object[this.field], this.goal, this.rate * dt);
-  else
-    this.object[this.field] = lerp(this.object[this.field], this.goal, this.rate * dt);
-  if (this.object[this.field] == this.goal && this.callback) this.callback(); 
+  if (this.object === undefined) this.object = this.entity;
+  if (this.stopped) return;
+  var done = true;
+  for (var field in this.goals) {
+    if (field == "angle")
+      this.object[field] = lerp_angle(this.object[field], this.goals[field], this.rate * dt);
+    else
+      this.object[field] = lerp(this.object[field], this.goals[field], this.rate * dt);
+    if (this.object[field] != this.goals[field]) done = false;
+  }
+  if (done && this.callback) {
+    this.stopped = true;
+    this.callback();
+  }
+};
+Lerp.go = function (goals) {
+  this.stopped = false;
+  this.goals = goals;
 };
 
 FadeIn.update = function (dt) {
@@ -199,8 +250,12 @@ var Oscillate = Object.create(Behavior);
 Oscillate.update = function (dt) {
   if (!this.started) this.start();
   this.time += this.rate * dt;
-  this.object[this.field] = this.constant * Math.sin(this.time) + this.initial;
-}
+  if (this.func === "cos") {
+    this.object[this.field] = this.constant * Math.cos(this.time) + this.initial;    
+  } else {
+    this.object[this.field] = this.constant * Math.sin(this.time) + this.initial;    
+  }
+};
 Oscillate.start = function () {
   this.started = true;
   this.time = this.time || 0;
@@ -208,7 +263,7 @@ Oscillate.start = function () {
   this.initial = this.initial || 0;
   this.rate = this.rate || 1;
   this.object = this.object || this.entity;
-}
+};
 
 var Cooldown = Object.create(Behavior);
 Cooldown.update = function (dt) {
