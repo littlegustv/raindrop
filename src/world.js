@@ -270,7 +270,7 @@ var World = {
       var e = res.lastIndexOf(".");
       var name = this.gameInfo.resources[i].name !== undefined ? this.gameInfo.resources[i].name : res.substring(0, e);
       var ext = res.substring(e, res.length);
-      if (ext == ".png") {
+      if (ext == ".png" || ext == ".gif") {
         Resources[name] = {image: new Image(), frames: this.gameInfo.resources[i].frames || 1, speed: this.gameInfo.resources[i].speed || 1, animations: this.gameInfo.resources[i].animations || 1 };
         Resources[name].image.src = this.resource_path + res;
         Resources[name].image.onload = function () {
