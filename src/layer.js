@@ -6,7 +6,7 @@ var Layer = {
     } else {
       this.camera = Object.create(Camera).init(0,0);
     }
-    this.bg = "white";
+    //this.bg = "white";
     this.entities = [];
     this.canvas = document.createElement('canvas');
     this.canvas.width = w; this.canvas.height = h;
@@ -53,8 +53,12 @@ var Layer = {
       });
   },
   draw: function (ctx) {
-    this.ctx.fillStyle = this.bg;
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    if (this.bg) {
+      this.ctx.fillStyle = this.bg;
+      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    } else {
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    }
     this.ctx.save();
     this.camera.draw(this.ctx);
 

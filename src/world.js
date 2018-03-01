@@ -266,62 +266,52 @@ var World = {
     var w = this;
 
     for (var i = 0; i < this.gameInfo.resources.length; i++ ) {
-      var res = this.gameInfo.resources[i].path;
-      var e = res.lastIndexOf(".");
-      var name = this.gameInfo.resources[i].name !== undefined ? this.gameInfo.resources[i].name : res.substring(0, e);
-      var ext = res.substring(e, res.length);
-      if (ext == ".png" || ext == ".gif") {
-        Resources[name] = {image: new Image(), frames: this.gameInfo.resources[i].frames || 1, speed: this.gameInfo.resources[i].speed || 1, animations: this.gameInfo.resources[i].animations || 1 };
-        Resources[name].image.src = this.resource_path + res;
-        Resources[name].image.onload = function () {
-          w.progressBar();
-        };
-      }
-      else if (ext == ".ogg") {
-        this.loadOGG(res, name);
-/*        Resources[name] = {sound: new Audio(this.resource_path + res, streaming=false)};
-        w.progressBar();
-        Resources[name].sound.onload = function () {
-          console.log("loaded sound");
-        }*/
-      }
-      else if (ext == ".wav") {
-        this.loadOGG(res, name);
-      }
-      else if (ext == ".js") {
-        var request = new XMLHttpRequest();
-        request.open("GET", this.resource_path + res, true);
-        request.onload = function () {
-          w.sceneInfo = request.response;
-          w.progressBar();
-        };
-        request.send();
-      }
-      else if (ext == ".json") {
-        var request = new XMLHttpRequest();
-        request.open("GET", this.resource_path + res, true);
-        request.onload = function () {
-          Resources[name] = JSON.parse(request.response);
-          w.progressBar();
-        };
-        request.send();
-      }
+      (function () {
+        var res = w.gameInfo.resources[i].path;
+        var e = res.lastIndexOf(".");
+        var name = w.gameInfo.resources[i].name !== undefined ? w.gameInfo.resources[i].name : res.substring(0, e);
+        var ext = res.substring(e, res.length);
+        if (ext == ".png" || ext == ".gif") {
+          Resources[name] = {image: new Image(), frames: w.gameInfo.resources[i].frames || 1, speed: w.gameInfo.resources[i].speed || 1, animations: w.gameInfo.resources[i].animations || 1 };
+          Resources[name].image.src = w.resource_path + res;
+          Resources[name].image.onload = function () {
+            w.progressBar();
+          };
+        }
+        else if (ext == ".ogg") {
+          w.loadOGG(res, name);
+        }
+        else if (ext == ".wav") {
+          w.loadOGG(res, name);
+        }
+        else if (ext == ".js") {
+          var request = new XMLHttpRequest();
+          request.open("GET", w.resource_path + res, true);
+          request.onload = function () {
+            w.sceneInfo = request.response;
+            w.progressBar();
+          };
+          request.send();
+        }
+        else if (ext == ".json") {
+          var request = new XMLHttpRequest();
+          request.open("GET", w.resource_path + res, true);
+          request.onload = function () {
+            Resources[name] = JSON.parse(request.response);
+            w.progressBar();
+          };
+          request.send();
+        }
+      }());
     }
   },
   loadOGG: function (res, name) {
     var w = this;
-    // cant play ogg, load mp3
-    /*if (name == "soundtrack" || name == "soundtrackFast") {
-      this.progressBar();
-    }*/
     if (this.audioType.length <= 0) {
       res = res.replace("ogg", "mp3");
-      //console.log("replaced?");
     }
-    //console.log("NEW", res);
     if (!AudioContext) {
-      Resources[name] = new Audio(this.resource_path + res, streaming=false);
-      //Resources[name].src = this.resource_path + res;
+      Resources[name] = new Audio(this.resource_path);
       w.progressBar();
       return;
     }

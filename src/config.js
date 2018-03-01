@@ -19,6 +19,9 @@ function requestFullScreen () {
 }
 
 var EASE = {
+  constant: function (start, end, t) { // note, this is handled a little differently - with 'start' being original start, not current...
+    return start + (end - start) * t;
+  },
   linear: function (start, end, t) {
     return start + (end - start) * t;
   },
@@ -76,7 +79,7 @@ function cross(v1, v2) {
 }
 
 function sign (n) {
-  return n >= 0 ? 1 : -1;
+  return (n > 0 ? 1 : (n < 0 ? -1 : 0));
 }
 
 function short_angle(a1, a2) {
@@ -93,6 +96,10 @@ function lerp_angle (a1, a2, rate) {
 
 function choose (array) {
   return array[Math.floor(Math.random() * array.length)];
+}
+
+function round(n, interval) {
+  return Math.round(n / interval) * interval;
 }
 
 function project(axes, vertices) {
