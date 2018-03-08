@@ -2,19 +2,17 @@
 <html>
 <head>
   <script src="releases/raindrop.js"></script>
-  <!--
-  -->
-  <script src="demo_resource.js"></script>
-  <script src="chaining.js"></script>
-  <script src="demo_local.js"></script>
   <style>
-    canvas {
-      display: inline-block;
-      max-width: 50%;
-      height: auto;
-    }
     body {
       text-align: center;
+      margin: 0px;
+    }
+    .row {
+      width: 100%;
+    }
+    .col-sm-6 {
+      width: 50%;
+      float: left;
     }
   </style>
 </head>
@@ -23,6 +21,26 @@
     <h3>RainDrop</h3>
     <h4><i>A JavaScript Game Engine</i></h4>
     <a href="releases/raindrop2017-02-06.js">Current Version</a>
+    <div class='row'>
+      <div class='col-sm-6'>
+        <h4>Local (no loaded resources)</h4>
+        <iframe src="./local.html" height="180" width="320"></iframe>
+      </div>
+      <div class='col-sm-6'>
+        <h4>Resources loaded from JSON file</h4>
+        <iframe src="./resource.html" height="180" width="320"></iframe>
+      </div>
+    </div>
+    <div class='row'>
+      <div class='col-sm-6'>
+        <h4>Using new chaining behavior (most functions return object)</h4>
+        <iframe src="./chaining.html" height="180" width="320"></iframe>
+      </div>
+      <div class='col-sm-6'>
+        <h4>Demo of RPG basics (tile-based movement, dialogue trees, Tiled map editor loading)</h4>
+        <iframe src="./rpg.html" height="180" width="320"></iframe>
+      </div>
+    </div>
   </div>
 </body>
 </html>

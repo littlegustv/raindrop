@@ -1,4 +1,4 @@
-var gameWorld2 = Object.create(World).init(240, 135, "demo_resource.json");
+var gameWorld2 = Object.create(World).init(320, 180, "demo_resource.json");
 
 var Cursor = Object.create(Behavior);
 Cursor.draw = function (ctx) {
