@@ -10,8 +10,38 @@ x- (raindrop) clear background; handling layers for LIGHTING and for blank layer
 
 - LATER: turn-based combat engine
 
+BUG: 
+  - SPACING and right-aligned spritefont (and dialoguetree)
 x- solid detection/handling ("solids" grid 2d array, check before movement?)
 */
+
+// from inklewriter JSON
+var DialogueTree = Object.create(SpriteFont);
+DialogueTree.init = function (sprite, data) {
+  this.oldInit(sprite);
+  this.tree = data.stitches;
+  console.log(data);
+  this.root = data.initial;
+  this.text = this.tree[this.root].content[0];
+  this.selected = 2;
+  return this;
+};
+/*
+additions:
+ - ability to move selection
+ - drawing of choices
+ - check that selection exists
+ - handling 'end-state'
+ - handling conditions (once added), state variables
+ - restarting on dialogue end
+
+ */
+DialogueTree.select = function () {
+  this.root = this.tree[this.root].content[this.selected].linkPath;
+  //console.log(this.root, this.tree);
+  this.text = this.tree[this.root].content[0];
+};
+
 
 // direction, offset, tilesize, speed, rate
 var TileMove = Object.create(Behavior);
@@ -41,14 +71,23 @@ TileMove.toGrid = function (x, y) {
 TileMove.fromGrid = function (x, y) {
   return {x: this.offset.x + this.tilesize * x, y: this.offset.y + this.tilesize * y};
 };
+TileMove.move = function (direction) {
+  this.direction = direction;
+  if (this.direction.y === 1) this.entity.animation = 0;
+  else if (this.direction.x === 1) this.entity.animation = 1;
+  else if (this.direction.y === -1) this.entity.animation = 2;
+  else if (this.direction.x === -1) this.entity.animation = 3;
+};
 
 var game = Object.create(World).init(320, 180);
 game.resource_path = "";
 game.gameInfo = {resources: [
-  {path: "res/witch.png", frames: 3, animations: 1, speed: 0.25, name: "witch"},
+  {path: "res/witch.png", frames: 3, animations: 4, speed: 0.25, name: "witch"},
+  {path: "res/font.png", frames: 95, animations: 1, speed: 0.25, name: "font"},
   {path: "res/tileset.png", frames: 4, animations: 4, speed: 0.5, name: "tileset"},
-  {path: "res/spirit.png", frames: 1, animations: 5, speed: 0.5, name: "spirit"},
-  {path: "res/rpg.json", name: "rpg"}
+  {path: "res/spirit.png", frames: 1, animations: 1, speed: 0.5, name: "spirit"},
+  {path: "res/rpg.json", name: "rpg"},
+  {path: "res/dialogue.json", name: "dialogue"}
 ]};
 game.loadResources();
 var scene = game.add(Object.create(Scene).init());
@@ -69,35 +108,41 @@ scene.onStart = function () {
       }
     }
   }
-  var witch = bg.add(Object.create(Sprite).init(Resources.witch)).set({x: 4 * 15, y: 3 * 16, z: 10});
+  var witch = bg.add(Object.create(Sprite).init(Resources.witch)).set({x: 4 * 15, y: 3 * 16, z: 10, offset: {x: 0, y: -10}});
   debug = witch;
-  var g = bg.add(Object.create(Sprite).init(Resources.spirit)).set({x: 5 * 16, y: 4 * 16 });
+  var g = bg.add(Object.create(Sprite).init(Resources.spirit)).set({x: 8 * 16 + 8, y: 4 * 16 + 8 });
   witch.move = witch.add(TileMove, {direction: {x: 0, y: 0}, offset: {x: 8, y: 8}, tilesize: 16, speed: 100, rate: 10, grid: grid});
 
-  bg.camera.add(Follow, {target: witch, offset: {x: -game.w / 2, y: -game.h / 2}});
+  bg.camera.add(Follow, {target: witch, offset: {x: -game.w / 4, y: -game.h / 2}});
 
   var light = this.add(Object.create(Layer).init(game.w, game.h));
-  light.camera.add(Follow, {target: witch, offset: {x: -game.w / 2, y: -game.h / 2}});
+  light.camera.add(Follow, {target: witch, offset: {x: -game.w / 4, y: -game.h / 2}});
   light.bg = "black";
   var rings = [32, game.h / 2 - 16, game.w / 2];
   for (var i = 0; i < 2; i++) {
-    var lamp = light.add(Object.create(Circle).init()).set({x: witch.x, y: witch.y, radius: rings[i], opacity: 0.3, color: 'white', blend: 'destination-out'});
+    var lamp = light.add(Object.create(Circle).init()).set({x: witch.x, y: witch.y, radius: rings[i], opacity: 0.5, color: 'white', blend: 'destination-out'});
     lamp.add(Follow, {target: witch, offset: {x: 0, y: 0}});
   }
+
+  var ui = this.add(Object.create(Layer).init(game.w, game.h));
+  game.dialogue = ui.add(Object.create(DialogueTree).init(Resources.font, Resources.dialogue.data)).set({x: game.w - 8, y: 16, align: "right", spacing: 0});
 
   this.onKeyDown = function (e) {
     switch (e.keyCode) {
       case 37:
-        witch.move.direction = {x: -1, y: 0};
+        witch.move.move({x: -1, y: 0});
         break;
       case 39:
-        witch.move.direction = {x: 1, y: 0};
+        witch.move.move({x: 1, y: 0});
         break;
       case 38:
-        witch.move.direction = {x: 0, y: -1};
+        witch.move.move({x: 0, y: -1});
         break;
       case 40:
-        witch.move.direction = {x: 0, y: 1};
+        witch.move.move({x: 0, y: 1});
+        break;
+      case 32:
+        if (game.dialogue) game.dialogue.select();
         break;
     }
   };
