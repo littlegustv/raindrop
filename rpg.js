@@ -20,6 +20,7 @@ TileMove.update = function (dt) {
   var g = this.toGrid(this.entity.x, this.entity.y);
   if (this.grid[g.x + this.direction.x] && this.grid[g.x + this.direction.x][g.y + this.direction.y] === true) {
     this.direction = {x: 0, y: 0};
+    this.stop();
     console.log('solid!!');
   }
 
@@ -27,12 +28,12 @@ TileMove.update = function (dt) {
   if (this.direction.x !== 0) {
     this.entity.x += this.direction.x * this.speed * dt;
   } else {
-    this.entity.x = lerp(this.entity.x, Math.round((this.entity.x - this.offset.x) / this.tilesize) * this.tilesize + this.offset.x, this.rate * dt);
+    this.entity.x = lerp(this.entity.x, this.goal.x, this.rate * dt);
   } 
   if (this.direction.y !== 0) {
     this.entity.y += this.direction.y * this.speed * dt;
   } else {
-    this.entity.y = lerp(this.entity.y, Math.round((this.entity.y - this.offset.y) / this.tilesize) * this.tilesize + this.offset.y, this.rate * dt);
+    this.entity.y = lerp(this.entity.y, this.goal.y, this.rate * dt);
   }
 };
 TileMove.toGrid = function (x, y) {
@@ -41,6 +42,18 @@ TileMove.toGrid = function (x, y) {
 TileMove.fromGrid = function (x, y) {
   return {x: this.offset.x + this.tilesize * x, y: this.offset.y + this.tilesize * y};
 };
+TileMove.stop = function () {
+  var g = this.toGrid(this.entity.x, this.entity.y);
+  console.log('stopping', g.x, g.y);
+  this.goal = this.fromGrid(g.x + this.direction.x, g.y + this.direction.y);
+  this.direction = {x: 0, y: 0};
+  //Math.round((this.entity.x - this.offset.x) / this.tilesize) * this.tilesize + this.offset.x
+};
+TileMove.move = function (direction) {
+  if (this.direction.x === 0 && this.direction.y === 0 && this.goal.x === this.entity.x && this.goal.y === this.entity.y) {
+    this.direction = direction;
+  }
+}
 
 var game = Object.create(World).init(320, 180);
 game.resource_path = "";
@@ -73,6 +86,7 @@ scene.onStart = function () {
   debug = witch;
   var g = bg.add(Object.create(Sprite).init(Resources.spirit)).set({x: 5 * 16, y: 4 * 16 });
   witch.move = witch.add(TileMove, {direction: {x: 0, y: 0}, offset: {x: 8, y: 8}, tilesize: 16, speed: 100, rate: 10, grid: grid});
+  witch.move.stop();
 
   bg.camera.add(Follow, {target: witch, offset: {x: -game.w / 2, y: -game.h / 2}});
 
@@ -88,32 +102,32 @@ scene.onStart = function () {
   this.onKeyDown = function (e) {
     switch (e.keyCode) {
       case 37:
-        witch.move.direction = {x: -1, y: 0};
+        witch.move.move({x: -1, y: 0});
         break;
       case 39:
-        witch.move.direction = {x: 1, y: 0};
+        witch.move.move({x: 1, y: 0});
         break;
       case 38:
-        witch.move.direction = {x: 0, y: -1};
+        witch.move.move({x: 0, y: -1});
         break;
       case 40:
-        witch.move.direction = {x: 0, y: 1};
+        witch.move.move({x: 0, y: 1});
         break;
     }
   };
   this.onKeyUp = function (e) {
     switch (e.keyCode) {
       case 37:
-        witch.move.direction.x = 0;
+        witch.move.stop();
         break;
       case 39:
-        witch.move.direction.x = 0;
+        witch.move.stop();
         break;
       case 38:
-        witch.move.direction.y = 0;
+        witch.move.stop();
         break;
       case 40:
-        witch.move.direction.y = 0;
+        witch.move.stop();
         break;
     }
   };
