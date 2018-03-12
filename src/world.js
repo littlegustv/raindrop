@@ -126,8 +126,8 @@ var World = {
     }
   },
   draw: function () {
-    // it is up to the individual scenes to 'clear' or not
     if (this.scene) {
+      this.ctx.clearRect(0, 0, this.w, this.h);
       this.scene.draw(this.ctx);
     }
   },
