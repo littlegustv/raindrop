@@ -15,31 +15,82 @@ BUG:
 x- solid detection/handling ("solids" grid 2d array, check before movement?)
 */
 
+var LerpFollow = Object.create(Behavior);
+LerpFollow.update = function (dt) {
+  for (var key in this.offset) {
+    if (key === "angle") {
+      this.entity.angle = lerp_angle(this.entity.angle, this.target.angle + this.offset.angle, this.rate * dt);
+    } else {
+      this.entity[key] = lerp(this.entity[key], this.target[key] + this.offset[key], this.rate * dt);
+    }
+  }
+};
+
+Camera.draw = function (ctx) {
+  ctx.translate(-this.x,-this.y);
+  ctx.scale(this.scale, this.scale);
+};
+
+Sprite.onDraw = function (ctx) {
+  ctx.drawImage(this.sprite.image, this.frame * this.sprite.w, this.animation * this.sprite.h, this.sprite.w, this.sprite.h,
+    Math.round(this.x - this.w / 2), this.y - Math.round(this.h / 2), this.w, this.h);
+};
+
 // from inklewriter JSON
 var DialogueTree = Object.create(SpriteFont);
 DialogueTree.init = function (sprite, data) {
   this.oldInit(sprite);
   this.tree = data.stitches;
-  console.log(data);
+  //console.log(data);
   this.root = data.initial;
   this.text = this.tree[this.root].content[0];
   this.selected = 2;
   return this;
 };
+DialogueTree.drawText = function (ctx, text, index) {
+  if (index === this.selected) {
+    text = "[" + text + "]";
+  }
+  for (var i = 0; i < text.length; i++) {
+    var c = this.characters.indexOf(text[i]);
+    var x = this.getX(i);
+    if (c != -1) {
+      ctx.drawImage(this.sprite.image,
+        c * this.sprite.w, 0,
+        this.sprite.w, this.sprite.h,
+        Math.round(this.x - this.w / 2) + x + this.spacing * i, (index * (this.h + 2)) + this.y - Math.round(this.h / 2), this.w, this.h);
+    }
+  }
+};
+DialogueTree.onDraw = function (ctx) {
+  this.drawText(ctx, this.tree[this.root].content[0], 0);
+  for (var i = 1; i < this.tree[this.root].content.length; i++) {
+    if (this.tree[this.root].content[i].option) {
+      this.drawText(ctx, this.tree[this.root].content[i].option, i);
+    }
+  }
+};
+DialogueTree.up = function () {
+  this.selected = modulo((this.selected - 1), this.tree[this.root].content.length);
+};
+DialogueTree.down = function () {
+  this.selected = modulo((this.selected + 1), this.tree[this.root].content.length);
+};
 /*
 additions:
- - ability to move selection
- - drawing of choices
- - check that selection exists
- - handling 'end-state'
  - handling conditions (once added), state variables
- - restarting on dialogue end
 
  */
 DialogueTree.select = function () {
   this.root = this.tree[this.root].content[this.selected].linkPath;
+  this.selected = 0;
   //console.log(this.root, this.tree);
-  this.text = this.tree[this.root].content[0];
+  if (this.tree[this.root]) {
+    this.text = this.tree[this.root].content[0];
+  } else {
+    this.alive = false;
+    //game.dialogue = undefined;
+  }
 };
 
 
@@ -94,6 +145,7 @@ var scene = game.add(Object.create(Scene).init());
 scene.onStart = function () {
   var bg = this.add(Object.create(Layer).init(game.w, game.h));
   var grid = [], HEIGHT = Resources.rpg.height, WIDTH = Resources.rpg.width, TILESIZE = Resources.rpg.tileheight;
+  this.talkables = [];
   // loading tilemaps and SOLID information
   for (var i = 0; i < Resources.rpg.layers.length; i++) {
     bg.add(Object.create(TiledMap).init(Resources.tileset, Resources.rpg.layers[i])).set({x: TILESIZE * WIDTH / 2, y: TILESIZE * HEIGHT / 2, z: i});
@@ -110,10 +162,13 @@ scene.onStart = function () {
   }
   var witch = bg.add(Object.create(Sprite).init(Resources.witch)).set({x: 4 * 15, y: 3 * 16, z: 10, offset: {x: 0, y: -10}});
   debug = witch;
-  var g = bg.add(Object.create(Sprite).init(Resources.spirit)).set({x: 8 * 16 + 8, y: 4 * 16 + 8 });
+  var g = bg.add(Object.create(Sprite).init(Resources.spirit)).set({x: 8 * 16 + 8, y: 4 * 16 + 8, data: Resources.dialogue.data });
+  this.talkables.push(g);
+
   witch.move = witch.add(TileMove, {direction: {x: 0, y: 0}, offset: {x: 8, y: 8}, tilesize: 16, speed: 100, rate: 10, grid: grid});
 
-  bg.camera.add(Follow, {target: witch, offset: {x: -game.w / 4, y: -game.h / 2}});
+  bg.camera.add(LerpFollow, {target: witch, offset: {x: -game.w / 4, y: -game.h / 2}, rate: 5});
+
 
   var light = this.add(Object.create(Layer).init(game.w, game.h));
   light.camera.add(Follow, {target: witch, offset: {x: -game.w / 4, y: -game.h / 2}});
@@ -125,24 +180,40 @@ scene.onStart = function () {
   }
 
   var ui = this.add(Object.create(Layer).init(game.w, game.h));
-  game.dialogue = ui.add(Object.create(DialogueTree).init(Resources.font, Resources.dialogue.data)).set({x: game.w - 8, y: 16, align: "right", spacing: 0});
 
   this.onKeyDown = function (e) {
     switch (e.keyCode) {
       case 37:
-        witch.move.move({x: -1, y: 0});
+        if (game.dialogue) game.dialogue.down();
+        else witch.move.move({x: -1, y: 0});
         break;
       case 39:
-        witch.move.move({x: 1, y: 0});
+        if (game.dialogue) game.dialogue.up();
+        else witch.move.move({x: 1, y: 0});
         break;
       case 38:
-        witch.move.move({x: 0, y: -1});
+        if (game.dialogue) game.dialogue.up();
+        else witch.move.move({x: 0, y: -1});
         break;
       case 40:
-        witch.move.move({x: 0, y: 1});
+        if (game.dialogue) game.dialogue.down();
+        else witch.move.move({x: 0, y: 1});
         break;
       case 32:
         if (game.dialogue) game.dialogue.select();
+        else {
+          var p = witch;
+          for (var i = 0; i < scene.talkables.length; i++) {
+            var g = scene.talkables[i];
+            if (distance(p.x, p.y, g.x, g.y) <= 16 && modulo(angle(witch.x, witch.y, scene.talkables[i].x, scene.talkables[i].y), PI2) == witch.angle) {
+              game.dialogue = ui.add(Object.create(DialogueTree).init(Resources.font, scene.talkables[i].data)).set({x: game.w - 8, y: 16, align: "right", spacing: 0});
+              break;              
+            }
+          }
+        }
+        break;
+      case 27:
+        if (game.dialogue) game.dialogue.alive = false;
         break;
     }
   };
@@ -164,3 +235,6 @@ scene.onStart = function () {
   };
   this.ready = true;
 };
+scene.onUpdate = function () {
+  if (game.dialogue && !game.dialogue.alive) game.dialogue = undefined;
+}
