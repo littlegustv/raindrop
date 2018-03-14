@@ -1,18 +1,14 @@
 /*
 
-- move examples to FOLDERS, with respective subdirectories?
-x- (raindrop) clear background; handling layers for LIGHTING and for blank layer
-- tighten up movement
-  - single direction at a time
-  - round TOWARDS direction of movement 
-- add 'dialogue' object based on inklewriter JSON - include dialogue tree, internal variables, etc.
-- add some examples - dialogue that can be exhausted, dialogue trees that can be changed from action/item/variable
+- movement
+  - start/stop a little awkward with buffer
+- dialogue
+  - state variables, ability to 'finish' dialogue
 
-- LATER: turn-based combat engine
+- turn-based combat engine -> new scene?
+  - 
 
 BUG: 
-  - SPACING and right-aligned spritefont (and dialoguetree)
-x- solid detection/handling ("solids" grid 2d array, check before movement?)
 */
 
 var LerpFollow = Object.create(Behavior);
@@ -44,16 +40,15 @@ DialogueTree.init = function (sprite, data) {
   //console.log(data);
   this.root = data.initial;
   this.text = this.tree[this.root].content[0];
-  this.selected = 2;
+  this.options = this.tree[this.root].content.filter(function (o) { return o.option !== undefined; });
+
+  this.selected = 0;
   return this;
 };
 DialogueTree.drawText = function (ctx, text, index) {
-  if (index === this.selected) {
-    text = "[" + text + "]";
-  }
   for (var i = 0; i < text.length; i++) {
     var c = this.characters.indexOf(text[i]);
-    var x = this.getX(i);
+    var x = this.getX(i, text);
     if (c != -1) {
       ctx.drawImage(this.sprite.image,
         c * this.sprite.w, 0,
@@ -62,19 +57,31 @@ DialogueTree.drawText = function (ctx, text, index) {
     }
   }
 };
+DialogueTree.getX = function (n, text) {
+  if (this.align == "center") {
+    return this.w * (n - text.length / 2) - this.spacing * text.length / 2;
+  } else if (this.align == "left") {
+    return this.w * n;
+  } else if (this.align == "right") {
+    return this.w * (n - text.length);
+  }
+};
+
 DialogueTree.onDraw = function (ctx) {
   this.drawText(ctx, this.tree[this.root].content[0], 0);
-  for (var i = 1; i < this.tree[this.root].content.length; i++) {
-    if (this.tree[this.root].content[i].option) {
-      this.drawText(ctx, this.tree[this.root].content[i].option, i);
-    }
+  for (var i = 0; i < this.options.length; i++) {
+    var text = this.options[i].option;
+    if (i === this.selected) {
+      text = "[" + text + "]";
+    }    
+    this.drawText(ctx, text, i + 1);
   }
 };
 DialogueTree.up = function () {
-  this.selected = modulo((this.selected - 1), this.tree[this.root].content.length);
+  this.selected = modulo((this.selected - 1), this.options.length);
 };
 DialogueTree.down = function () {
-  this.selected = modulo((this.selected + 1), this.tree[this.root].content.length);
+  this.selected = modulo((this.selected + 1), this.options.length);
 };
 /*
 additions:
@@ -82,28 +89,40 @@ additions:
 
  */
 DialogueTree.select = function () {
-  this.root = this.tree[this.root].content[this.selected].linkPath;
-  this.selected = 0;
-  //console.log(this.root, this.tree);
-  if (this.tree[this.root]) {
-    this.text = this.tree[this.root].content[0];
-  } else {
+  if (this.options.length <= 0) {
     this.alive = false;
-    //game.dialogue = undefined;
+    return;
   }
+  this.root = this.options[this.selected].linkPath;
+  this.selected = 0;
+  this.options = this.tree[this.root].content.filter(function (o) { return o.option !== undefined; });
+  //console.log(this.root, this.tree);
+  this.text = this.tree[this.root].content[0];
 };
 
 
 // direction, offset, tilesize, speed, rate
 var TileMove = Object.create(Behavior);
 TileMove.update = function (dt) {
-  // check for solid
   var g = this.toGrid(this.entity.x, this.entity.y);
+  
+  // SOLID
   if (this.grid[g.x + this.direction.x] && this.grid[g.x + this.direction.x][g.y + this.direction.y] === true) {
-    this.direction = {x: 0, y: 0};
+    this.stop(true);
     console.log('solid!!');
+  } else if (this.goal) {
+    this.entity.x = lerp(this.entity.x, this.goal.x, this.rate * dt);
+    this.entity.y = lerp(this.entity.y, this.goal.y, this.rate * dt);
+    if (this.entity.x === this.goal.x && this.entity.y === this.goal.y) this.goal = undefined;
+  } else if (this.direction.x !== 0 || this.direction.y !== 0) {
+    // key down, move constant
+    this.entity.x += this.direction.x * this.speed * dt;
+    this.entity.y += this.direction.y * this.speed * dt;
+  } else if (this.buffer !== undefined) {
+    this.move(this.buffer);
+    this.buffer = undefined;
   }
-
+/*
   // a little... slippery - will 'lerp' back to grid in one axis while moving at C in another....
   if (this.direction.x !== 0) {
     this.entity.x += this.direction.x * this.speed * dt;
@@ -114,7 +133,19 @@ TileMove.update = function (dt) {
     this.entity.y += this.direction.y * this.speed * dt;
   } else {
     this.entity.y = lerp(this.entity.y, Math.round((this.entity.y - this.offset.y) / this.tilesize) * this.tilesize + this.offset.y, this.rate * dt);
+  }*/
+};
+TileMove.stop = function (solid) {
+  var g = this.toGrid(this.entity.x, this.entity.y);
+  if (solid) {
+    this.goal = this.fromGrid(g.x, g.y);
+    this.direction = {x: 0, y: 0};
+  } else {
+    g = this.toGrid(this.entity.x + this.direction.x * this.tilesize / 2, this.entity.y + this.direction.y * this.tilesize / 2);
+    this.goal = this.fromGrid(g.x, g.y);
+    this.direction = {x: 0, y: 0};
   }
+  this.buffer = undefined;
 };
 TileMove.toGrid = function (x, y) {
   return {x: Math.round((x - this.offset.x) / this.tilesize), y: Math.round((y - this.offset.y) / this.tilesize)};
@@ -123,11 +154,13 @@ TileMove.fromGrid = function (x, y) {
   return {x: this.offset.x + this.tilesize * x, y: this.offset.y + this.tilesize * y};
 };
 TileMove.move = function (direction) {
-  this.direction = direction;
-  if (this.direction.y === 1) this.entity.animation = 0;
-  else if (this.direction.x === 1) this.entity.animation = 1;
-  else if (this.direction.y === -1) this.entity.animation = 2;
-  else if (this.direction.x === -1) this.entity.animation = 3;
+  if (this.direction.x === 0 && this.direction.y === 0 && this.goal === undefined) {
+    this.direction = direction;
+    // this uses the following animation index convention [down (0), right (1), up (2), left (3)]
+    this.entity.animation = Math.abs(this.direction.x * 2) + Math.abs(this.direction.y * 1) - this.direction.x - this.direction.y;    
+  } else {
+    this.buffer = direction;
+  }
 };
 
 var game = Object.create(World).init(320, 180);
@@ -160,12 +193,12 @@ scene.onStart = function () {
       }
     }
   }
-  var witch = bg.add(Object.create(Sprite).init(Resources.witch)).set({x: 4 * 15, y: 3 * 16, z: 10, offset: {x: 0, y: -10}});
+  var witch = bg.add(Object.create(Sprite).init(Resources.witch)).set({x: 8 + 8 * 16, y: 8 + 3 * 16, z: 10, offset: {x: 0, y: -10}});
   debug = witch;
   var g = bg.add(Object.create(Sprite).init(Resources.spirit)).set({x: 8 * 16 + 8, y: 4 * 16 + 8, data: Resources.dialogue.data });
   this.talkables.push(g);
 
-  witch.move = witch.add(TileMove, {direction: {x: 0, y: 0}, offset: {x: 8, y: 8}, tilesize: 16, speed: 100, rate: 10, grid: grid});
+  witch.move = witch.add(TileMove, {direction: {x: 0, y: 0}, offset: {x: 8, y: 8}, tilesize: 16, speed: 100, rate: 20, grid: grid});
 
   bg.camera.add(LerpFollow, {target: witch, offset: {x: -game.w / 4, y: -game.h / 2}, rate: 5});
 
@@ -220,16 +253,16 @@ scene.onStart = function () {
   this.onKeyUp = function (e) {
     switch (e.keyCode) {
       case 37:
-        witch.move.direction.x = 0;
+        witch.move.stop();
         break;
       case 39:
-        witch.move.direction.x = 0;
+        witch.move.stop();
         break;
       case 38:
-        witch.move.direction.y = 0;
+        witch.move.stop();
         break;
       case 40:
-        witch.move.direction.y = 0;
+        witch.move.stop();
         break;
     }
   };
