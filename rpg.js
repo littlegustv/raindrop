@@ -1,36 +1,24 @@
 /*
 
 - movement
-  - start/stop a little awkward with buffer
-- dialogue
-  - state variables, ability to 'finish' dialogue
+  - use keys hash instead of onkeydown event?
 
-- turn-based combat engine -> new scene?
-  - 
+- dialogue
+  - conditions and state variables
+    - create inklewriter example
+    - handle it
+    - add ability to modify dialogue variable from external source
+
+- turn-based combat engine
+  - new scene (combat), load from global COMBAT data object
+  - 'states' with buttons, controls like in game menu, salvage store, etc.
+  - enemies list
+  - load abilities data depending on global player info (class, level, etc.)
+  - transitions!  like have bg & fg cameras lerp in/out on load/exit
+  - go to second scene for stats (i.e. gained X experience, etc.)
 
 BUG: 
 */
-
-var LerpFollow = Object.create(Behavior);
-LerpFollow.update = function (dt) {
-  for (var key in this.offset) {
-    if (key === "angle") {
-      this.entity.angle = lerp_angle(this.entity.angle, this.target.angle + this.offset.angle, this.rate * dt);
-    } else {
-      this.entity[key] = lerp(this.entity[key], this.target[key] + this.offset[key], this.rate * dt);
-    }
-  }
-};
-
-Camera.draw = function (ctx) {
-  ctx.translate(-this.x,-this.y);
-  ctx.scale(this.scale, this.scale);
-};
-
-Sprite.onDraw = function (ctx) {
-  ctx.drawImage(this.sprite.image, this.frame * this.sprite.w, this.animation * this.sprite.h, this.sprite.w, this.sprite.h,
-    Math.round(this.x - this.w / 2), this.y - Math.round(this.h / 2), this.w, this.h);
-};
 
 // from inklewriter JSON
 var DialogueTree = Object.create(SpriteFont);
@@ -107,7 +95,7 @@ TileMove.update = function (dt) {
   var g = this.toGrid(this.entity.x, this.entity.y);
   
   // SOLID
-  if (this.grid[g.x + this.direction.x] && this.grid[g.x + this.direction.x][g.y + this.direction.y] === true) {
+  if (this.solid(g.x + this.direction.x, g.y + this.direction.y)) {
     this.stop(true);
     console.log('solid!!');
   } else if (this.goal) {
@@ -122,18 +110,10 @@ TileMove.update = function (dt) {
     this.move(this.buffer);
     this.buffer = undefined;
   }
-/*
-  // a little... slippery - will 'lerp' back to grid in one axis while moving at C in another....
-  if (this.direction.x !== 0) {
-    this.entity.x += this.direction.x * this.speed * dt;
-  } else {
-    this.entity.x = lerp(this.entity.x, Math.round((this.entity.x - this.offset.x) / this.tilesize) * this.tilesize + this.offset.x, this.rate * dt);
-  } 
-  if (this.direction.y !== 0) {
-    this.entity.y += this.direction.y * this.speed * dt;
-  } else {
-    this.entity.y = lerp(this.entity.y, Math.round((this.entity.y - this.offset.y) / this.tilesize) * this.tilesize + this.offset.y, this.rate * dt);
-  }*/
+};
+
+TileMove.solid = function (x, y) {
+  return this.grid[x] && this.grid[x][y] === true;
 };
 TileMove.stop = function (solid) {
   var g = this.toGrid(this.entity.x, this.entity.y);
@@ -141,7 +121,10 @@ TileMove.stop = function (solid) {
     this.goal = this.fromGrid(g.x, g.y);
     this.direction = {x: 0, y: 0};
   } else {
-    g = this.toGrid(this.entity.x + this.direction.x * this.tilesize / 2, this.entity.y + this.direction.y * this.tilesize / 2);
+    g = this.toGrid(this.entity.x + this.direction.x * this.tilesize / 4, this.entity.y + this.direction.y * this.tilesize / 4);
+    if (this.solid(g.x, g.y)) {
+      g = this.toGrid(this.entity.x, this.entity.y);
+    }
     this.goal = this.fromGrid(g.x, g.y);
     this.direction = {x: 0, y: 0};
   }

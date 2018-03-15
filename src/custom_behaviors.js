@@ -1,3 +1,15 @@
+// lerp to position of target
+var LerpFollow = Object.create(Behavior);
+LerpFollow.update = function (dt) {
+  for (var key in this.offset) {
+    if (key === "angle") {
+      this.entity.angle = lerp_angle(this.entity.angle, this.target.angle + this.offset.angle, this.rate * dt);
+    } else {
+      this.entity[key] = lerp(this.entity[key], this.target[key] + this.offset[key], this.rate * dt);
+    }
+  }
+};
+
 // frames: [{time, state: {x, y, etc.}}], loop
 var KeyFrame = Object.create(Behavior);
 KeyFrame.update = function (dt) {
