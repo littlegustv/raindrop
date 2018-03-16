@@ -4,7 +4,6 @@
   - conditions and state variables
     - create better dialogue example
     - look into using inky
-    - better way of checking proximity to dialogue-person
 
 - turn-based combat engine
   - new scene (combat), load from global COMBAT data object
