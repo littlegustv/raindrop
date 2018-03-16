@@ -2,11 +2,9 @@
 
 - dialogue
   - conditions and state variables
-    - create inklewriter example
-      - three variables: 'found', 'unhelpful' and 'started'
-        - 'started' skips opening node of dialogue (hello can you help me)
-        - 'unhelpful' comes from a dialogue choice (move to different node --> "oh, nevermind.")
-        - 'found', sets EXTERNALLY on collision with CAT sprite
+    - create better dialogue example
+    - look into using inky
+    - better way of checking proximity to dialogue-person
 
 - turn-based combat engine
   - new scene (combat), load from global COMBAT data object
@@ -26,8 +24,12 @@ DialogueTree.init = function (sprite, data) {
   this.tree = data.stitches;
   //console.log(data);
   this.root = data.initial;
+  this.data = data;
   this.text = this.tree[this.root].content[0];
-  this.options = this.tree[this.root].content.filter(function (o) { return o.option !== undefined; });
+  console.log('data flags', data.flags);
+  this.flags = data.flags || {};
+  this.setOptions();
+  this.setFlags();
 
   this.selected = 0;
   return this;
@@ -82,11 +84,40 @@ DialogueTree.select = function () {
   }
   this.root = this.options[this.selected].linkPath;
   this.selected = 0;
-  this.options = this.tree[this.root].content.filter(function (o) { return o.option !== undefined; });
+  this.setOptions();
+  this.setFlags();
+  
   //console.log(this.root, this.tree);
   this.text = this.tree[this.root].content[0];
 };
-
+DialogueTree.setOptions = function () {
+  var d = this;
+  this.options = this.tree[this.root].content.filter(function (o) {
+    if (o.notIfConditions !== undefined && o.notIfConditions !== null)  {
+      for (var i = 0; i < o.notIfConditions.length; i++) {
+        console.log('notif', o.notIfConditions[i].notIfCondition);
+        if (d.flags[o.notIfConditions[i].notIfCondition] === true) return false;
+      }
+    }
+    if (o.ifConditions !== undefined && o.ifConditions !== null)  {
+      for (var i = 0; i < o.ifConditions.length; i++) {
+        console.log('if', o.ifConditions[i].ifCondition);
+        if (d.flags[o.ifConditions[i].ifCondition] !== true) return false;
+      }
+    }
+    //if (o.ifCondition !== null && d.flags[o.ifCondition] !== true) return false;
+    return o.option !== undefined;
+  });
+};
+DialogueTree.setFlags = function () {
+  for (var i = 0; i < this.tree[this.root].content.length; i++) {
+    if (this.tree[this.root].content[i].flagName) {
+      this.flags[this.tree[this.root].content[i].flagName] = true;
+      console.log(this.flags);
+    }
+  }
+  this.data.flags = this.flags;
+};
 
 // direction, offset, tilesize, speed, rate
 var TileMove = Object.create(Behavior);
@@ -153,6 +184,7 @@ TileMove.move = function (direction) {
 var game = Object.create(World).init(320, 180);
 game.resource_path = "";
 game.gameInfo = {resources: [
+  {path: "res/cat.png", frames: 1, animations: 1, speed: 0.25, name: "cat"},
   {path: "res/witch.png", frames: 3, animations: 4, speed: 0.25, name: "witch"},
   {path: "res/font.png", frames: 95, animations: 1, speed: 0.25, name: "font"},
   {path: "res/tileset.png", frames: 4, animations: 4, speed: 0.5, name: "tileset"},
@@ -160,7 +192,7 @@ game.gameInfo = {resources: [
   {path: "res/rpg.json", name: "rpg"},
   {path: "res/dialogue.json", name: "dialogue"}
 ]};
-game.loadResources();
+game.loadResources(); // raindrop --> improve
 var scene = game.add(Object.create(Scene).init());
 scene.onStart = function () {
   var bg = this.add(Object.create(Layer).init(game.w, game.h));
@@ -186,6 +218,17 @@ scene.onStart = function () {
   this.talkables.push(g);
 
   witch.move = witch.add(TileMove, {direction: {x: 0, y: 0}, offset: {x: 8, y: 8}, tilesize: 16, speed: 100, rate: 20, grid: grid});
+
+  cat = bg.add(Object.create(Sprite).init(Resources.cat)).set({x: witch.x + 2 * 16, y: witch.y, z: 9});
+  cat.add(Behavior, {update: function (dt) {
+    var w = witch.move.toGrid(witch.x, witch.y);
+    var h = witch.move.toGrid(this.entity.x, this.entity.y);
+    if (w.x === h.x && w.y === h.y) {
+      if (g.data.flags === undefined) g.data.flags = {};
+      g.data.flags.found = true;
+      this.entity.alive = false;
+    }
+  }});
 
   bg.camera.add(LerpFollow, {target: witch, offset: {x: -game.w / 4, y: -game.h / 2}, rate: 5});
 
@@ -265,7 +308,7 @@ scene.onStart = function () {
         break;
     }
   };
-  this.ready = true;
+  this.ready = true; // raindrop --> IMPROVE
 };
 scene.onUpdate = function () {
   if (game.dialogue && !game.dialogue.alive) game.dialogue = undefined;
