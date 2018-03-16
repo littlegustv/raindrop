@@ -218,6 +218,9 @@ scene.onStart = function () {
   this.talkables.push(g);
 
   witch.move = witch.add(TileMove, {direction: {x: 0, y: 0}, offset: {x: 8, y: 8}, tilesize: 16, speed: 100, rate: 20, grid: grid});
+  // set talkable coordinates to solid
+  var gcoord = witch.move.toGrid(g.x, g.y);
+  witch.move.grid[gcoord.x][gcoord.y] = true;
 
   cat = bg.add(Object.create(Sprite).init(Resources.cat)).set({x: witch.x + 2 * 16, y: witch.y, z: 9});
   cat.add(Behavior, {update: function (dt) {
@@ -279,10 +282,13 @@ scene.onStart = function () {
         else {
           var p = witch;
           for (var i = 0; i < scene.talkables.length; i++) {
-            var g = scene.talkables[i];
-            if (distance(p.x, p.y, g.x, g.y) <= 16 && modulo(angle(witch.x, witch.y, scene.talkables[i].x, scene.talkables[i].y), PI2) == witch.angle) {
+            var g = witch.move.toGrid(scene.talkables[i].x, scene.talkables[i].y);
+            var w = witch.move.toGrid(witch.x, witch.y);
+            if (Math.abs(g.x - w.x) + Math.abs(g.y - w.y) === 1 &&
+              // check if the animation, which goes 0 (3 * PI / 2), 1 (0), 2 (PI / 2), 3 (PI) matches facing angle - i.e. are we 'looking' at the talkable object
+              witch.animation === modulo(3 - round(modulo(angle(game.scene.talkables[i].x, game.scene.talkables[i].y, witch.x, witch.y), PI2) / (PI / 2), 1), 4)) {
               game.dialogue = ui.add(Object.create(DialogueTree).init(Resources.font, scene.talkables[i].data)).set({x: game.w - 8, y: 16, align: "right", spacing: 0});
-              break;              
+              break;
             }
           }
         }
