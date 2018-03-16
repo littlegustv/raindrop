@@ -1,13 +1,12 @@
 /*
 
-- movement
-  - use keys hash instead of onkeydown event?
-
 - dialogue
   - conditions and state variables
     - create inklewriter example
-    - handle it
-    - add ability to modify dialogue variable from external source
+      - three variables: 'found', 'unhelpful' and 'started'
+        - 'started' skips opening node of dialogue (hello can you help me)
+        - 'unhelpful' comes from a dialogue choice (move to different node --> "oh, nevermind.")
+        - 'found', sets EXTERNALLY on collision with CAT sprite
 
 - turn-based combat engine
   - new scene (combat), load from global COMBAT data object
@@ -99,14 +98,18 @@ TileMove.update = function (dt) {
     this.stop(true);
     console.log('solid!!');
   } else if (this.goal) {
-    this.entity.x = lerp(this.entity.x, this.goal.x, this.rate * dt);
-    this.entity.y = lerp(this.entity.y, this.goal.y, this.rate * dt);
-    if (this.entity.x === this.goal.x && this.entity.y === this.goal.y) this.goal = undefined;
+    // make sure lerping never goes faster than constant speed
+    this.entity.x += clamp((lerp(this.entity.x, this.goal.x, this.rate * dt) - this.entity.x), -this.speed * dt, this.speed * dt);
+    this.entity.y += clamp((lerp(this.entity.y, this.goal.y, this.rate * dt) - this.entity.y), -this.speed * dt, this.speed * dt);
+    if (this.entity.x === this.goal.x && this.entity.y === this.goal.y) {
+      this.goal = undefined;
+    }
   } else if (this.direction.x !== 0 || this.direction.y !== 0) {
     // key down, move constant
     this.entity.x += this.direction.x * this.speed * dt;
     this.entity.y += this.direction.y * this.speed * dt;
   } else if (this.buffer !== undefined) {
+    // fix me: this could be improved, maybe by having internal "key" settings instead of relying on keydown events
     this.move(this.buffer);
     this.buffer = undefined;
   }
@@ -121,7 +124,8 @@ TileMove.stop = function (solid) {
     this.goal = this.fromGrid(g.x, g.y);
     this.direction = {x: 0, y: 0};
   } else {
-    g = this.toGrid(this.entity.x + this.direction.x * this.tilesize / 4, this.entity.y + this.direction.y * this.tilesize / 4);
+    // fix me: could add settable 'threshold' for moving to next tile, right now it is at zero (single keypress moves at least to next tile)
+    g = this.toGrid(this.entity.x + this.direction.x * this.tilesize / 2, this.entity.y + this.direction.y * this.tilesize / 2);
     if (this.solid(g.x, g.y)) {
       g = this.toGrid(this.entity.x, this.entity.y);
     }
@@ -190,9 +194,21 @@ scene.onStart = function () {
   light.camera.add(Follow, {target: witch, offset: {x: -game.w / 4, y: -game.h / 2}});
   light.bg = "black";
   var rings = [32, game.h / 2 - 16, game.w / 2];
-  for (var i = 0; i < 2; i++) {
-    var lamp = light.add(Object.create(Circle).init()).set({x: witch.x, y: witch.y, radius: rings[i], opacity: 0.5, color: 'white', blend: 'destination-out'});
+  for (var i = 0; i < 1; i++) {
+    var lamp = light.add(Object.create(Circle).init()).set({x: witch.x, y: witch.y, radius: rings[i], opacity: 1, color: 'white', blend: 'destination-out'});
     lamp.add(Follow, {target: witch, offset: {x: 0, y: 0}});
+    // spotlight effect
+    lamp.add(Behavior, {draw: function (ctx) {
+      ctx.moveTo(game.w / 2, -game.h);
+      ctx.beginPath();
+      ctx.globalAlpha = 0.5;
+      ctx.globalCompositeOperation = this.entity.blend;
+      ctx.fillStyle = "white";
+      ctx.lineTo(this.entity.x - this.entity.radius, this.entity.y);
+      ctx.lineTo(this.entity.x + this.entity.radius, this.entity.y);
+      ctx.lineTo(game.w / 2, -game.h);
+      ctx.fill();
+    }});
   }
 
   var ui = this.add(Object.create(Layer).init(game.w, game.h));
