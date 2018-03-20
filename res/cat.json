@@ -1,0 +1,504 @@
+﻿{
+  "inkVersion": 15,
+  "root": [
+    "^Could you help me?",
+    "\n",
+    [
+      "ev",
+      {
+        "^->": "2.$r1"
+      },
+      {
+        "temp=": "$r"
+      },
+      "str",
+      {
+        "->": "2.s"
+      },
+      [
+        {
+          "#n": "$r1"
+        }
+      ],
+      "/str",
+      "/ev",
+      {
+        "*": "2.c",
+        "flg": 18
+      },
+      {
+        "c": [
+          "ev",
+          {
+            "^->": "2.c.$r2"
+          },
+          "/ev",
+          {
+            "temp=": "$r"
+          },
+          {
+            "->": "2.s"
+          },
+          [
+            {
+              "#n": "$r2"
+            }
+          ],
+          "\n",
+          {
+            "->": "ohOkIUnderstand"
+          },
+          {
+            "#f": 7
+          }
+        ],
+        "s": [
+          "^Not right now",
+          {
+            "->": "$r",
+            "var": true
+          },
+          null
+        ]
+      }
+    ],
+    [
+      "ev",
+      {
+        "^->": "3.$r1"
+      },
+      {
+        "temp=": "$r"
+      },
+      "str",
+      {
+        "->": "3.s"
+      },
+      [
+        {
+          "#n": "$r1"
+        }
+      ],
+      "/str",
+      {
+        "VAR?": "unhelpful"
+      },
+      "!",
+      "/ev",
+      {
+        "*": "3.c",
+        "flg": 19
+      },
+      {
+        "c": [
+          "ev",
+          {
+            "^->": "3.c.$r2"
+          },
+          "/ev",
+          {
+            "temp=": "$r"
+          },
+          {
+            "->": "3.s"
+          },
+          [
+            {
+              "#n": "$r2"
+            }
+          ],
+          "\n",
+          {
+            "->": "itMightSeemSilly"
+          },
+          {
+            "#f": 7
+          }
+        ],
+        "s": [
+          "^OK",
+          {
+            "->": "$r",
+            "var": true
+          },
+          null
+        ]
+      }
+    ],
+    [
+      "ev",
+      {
+        "^->": "4.$r1"
+      },
+      {
+        "temp=": "$r"
+      },
+      "str",
+      {
+        "->": "4.s"
+      },
+      [
+        {
+          "#n": "$r1"
+        }
+      ],
+      "/str",
+      {
+        "VAR?": "found"
+      },
+      "/ev",
+      {
+        "*": "4.c",
+        "flg": 19
+      },
+      {
+        "c": [
+          "ev",
+          {
+            "^->": "4.c.$r2"
+          },
+          "/ev",
+          {
+            "temp=": "$r"
+          },
+          {
+            "->": "4.s"
+          },
+          [
+            {
+              "#n": "$r2"
+            }
+          ],
+          "\n",
+          {
+            "->": "youFoundHim"
+          },
+          {
+            "#f": 7
+          }
+        ],
+        "s": [
+          "^Actually...",
+          {
+            "->": "$r",
+            "var": true
+          },
+          null
+        ]
+      }
+    ],
+    "done",
+    {
+      "#f": 3,
+      "global decl": [
+        "ev",
+        0,
+        {
+          "VAR=": "unhelpful"
+        },
+        0,
+        {
+          "VAR=": "started"
+        },
+        0,
+        {
+          "VAR=": "found"
+        },
+        "/ev",
+        "end",
+        null
+      ],
+      "itMightSeemSilly": [
+        "^It might seem... silly.  I saw a cat here the other day, and now it's gone.",
+        "\n",
+        "ev",
+        1,
+        "/ev",
+        {
+          "re": true,
+          "temp=": "started"
+        },
+        [
+          "ev",
+          {
+            "^->": "itMightSeemSilly.6.$r1"
+          },
+          {
+            "temp=": "$r"
+          },
+          "str",
+          {
+            "->": ".^.s"
+          },
+          [
+            {
+              "#n": "$r1"
+            }
+          ],
+          "/str",
+          "/ev",
+          {
+            "*": ".^.c",
+            "flg": 18
+          },
+          {
+            "c": [
+              "ev",
+              {
+                "^->": "itMightSeemSilly.6.c.$r2"
+              },
+              "/ev",
+              {
+                "temp=": "$r"
+              },
+              {
+                "->": ".^.^.s"
+              },
+              [
+                {
+                  "#n": "$r2"
+                }
+              ],
+              "\n",
+              {
+                "->": "ohOkIUnderstand"
+              },
+              {
+                "#f": 7
+              }
+            ],
+            "s": [
+              "^That's too bad.",
+              {
+                "->": "$r",
+                "var": true
+              },
+              null
+            ]
+          }
+        ],
+        [
+          "ev",
+          {
+            "^->": "itMightSeemSilly.7.$r1"
+          },
+          {
+            "temp=": "$r"
+          },
+          "str",
+          {
+            "->": ".^.s"
+          },
+          [
+            {
+              "#n": "$r1"
+            }
+          ],
+          "/str",
+          "/ev",
+          {
+            "*": ".^.c",
+            "flg": 18
+          },
+          {
+            "c": [
+              "ev",
+              {
+                "^->": "itMightSeemSilly.7.c.$r2"
+              },
+              "/ev",
+              {
+                "temp=": "$r"
+              },
+              {
+                "->": ".^.^.s"
+              },
+              [
+                {
+                  "#n": "$r2"
+                }
+              ],
+              "\n",
+              {
+                "->": "wouldYouICantLea"
+              },
+              {
+                "#f": 7
+              }
+            ],
+            "s": [
+              "^Would you like me to look for it?",
+              {
+                "->": "$r",
+                "var": true
+              },
+              null
+            ]
+          }
+        ],
+        "done",
+        {
+          "#f": 3
+        }
+      ],
+      "ohOkIUnderstand": [
+        "^Oh ok, I understand.",
+        "\n",
+        "ev",
+        1,
+        "/ev",
+        {
+          "re": true,
+          "temp=": "unhelpful"
+        },
+        "done",
+        {
+          "#f": 3
+        }
+      ],
+      "thankYou": [
+        "^Thank you!",
+        "\n",
+        "done",
+        "end",
+        {
+          "#f": 3
+        }
+      ],
+      "wouldYouICantLea": [
+        "^Would you?!  I can't leave, and I am worried.",
+        "\n",
+        [
+          "ev",
+          {
+            "^->": "wouldYouICantLea.2.$r1"
+          },
+          {
+            "temp=": "$r"
+          },
+          "str",
+          {
+            "->": ".^.s"
+          },
+          [
+            {
+              "#n": "$r1"
+            }
+          ],
+          "/str",
+          "/ev",
+          {
+            "*": ".^.c",
+            "flg": 18
+          },
+          {
+            "c": [
+              "ev",
+              {
+                "^->": "wouldYouICantLea.2.c.$r2"
+              },
+              "/ev",
+              {
+                "temp=": "$r"
+              },
+              {
+                "->": ".^.^.s"
+              },
+              [
+                {
+                  "#n": "$r2"
+                }
+              ],
+              "\n",
+              {
+                "->": "ohOkIUnderstand"
+              },
+              {
+                "#f": 7
+              }
+            ],
+            "s": [
+              "^Cats can look after themselves.",
+              {
+                "->": "$r",
+                "var": true
+              },
+              null
+            ]
+          }
+        ],
+        [
+          "ev",
+          {
+            "^->": "wouldYouICantLea.3.$r1"
+          },
+          {
+            "temp=": "$r"
+          },
+          "str",
+          {
+            "->": ".^.s"
+          },
+          [
+            {
+              "#n": "$r1"
+            }
+          ],
+          "/str",
+          "/ev",
+          {
+            "*": ".^.c",
+            "flg": 18
+          },
+          {
+            "c": [
+              "ev",
+              {
+                "^->": "wouldYouICantLea.3.c.$r2"
+              },
+              "/ev",
+              {
+                "temp=": "$r"
+              },
+              {
+                "->": ".^.^.s"
+              },
+              [
+                {
+                  "#n": "$r2"
+                }
+              ],
+              "\n",
+              {
+                "->": "thankYou"
+              },
+              {
+                "#f": 7
+              }
+            ],
+            "s": [
+              "^I understand. Don't worry.",
+              {
+                "->": "$r",
+                "var": true
+              },
+              null
+            ]
+          }
+        ],
+        "done",
+        {
+          "#f": 3
+        }
+      ],
+      "youFoundHim": [
+        "^You found him!! THANSK!!!",
+        "\n",
+        "done",
+        {
+          "#f": 3
+        }
+      ]
+    }
+  ]
+}

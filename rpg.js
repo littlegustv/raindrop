@@ -16,6 +16,11 @@
 BUG: 
 */
 
+var fight = {
+  player: undefined,
+  enemies: []
+};
+
 // from inklewriter JSON
 var DialogueTree = Object.create(SpriteFont);
 DialogueTree.init = function (sprite, data) {
@@ -217,6 +222,12 @@ scene.onStart = function () {
   this.talkables.push(g);
 
   witch.move = witch.add(TileMove, {direction: {x: 0, y: 0}, offset: {x: 8, y: 8}, tilesize: 16, speed: 100, rate: 20, grid: grid});
+
+  witch.hp = 10;
+  witch.abilities = [
+    {name: "fire", cost: 2, damage: {min: 1, max: 5}, do_ability: function (target) { target.hp -= randint(this.damage.min, this.damage.max); }},
+    {name: "chop", cost: 0, damage: {min: 1, max: 2}, do_ability: function (target) { target.hp -= randint(this.damage.min, this.damage.max); }}
+  ];
   // set talkable coordinates to solid
   var gcoord = witch.move.toGrid(g.x, g.y);
   witch.move.grid[gcoord.x][gcoord.y] = true;
@@ -294,6 +305,15 @@ scene.onStart = function () {
         break;
       case 27:
         if (game.dialogue) game.dialogue.alive = false;
+        else {
+          fight.player = witch;
+          for (var i = 0; i < 3; i++) {
+            fight.enemies.push({sprite: Resources.spirit});
+          }
+          game.setScene(1, false);
+          game.scene.layers = [];
+          game.scene.onStart();
+        }
         break;
     }
   };
@@ -317,4 +337,102 @@ scene.onStart = function () {
 };
 scene.onUpdate = function () {
   if (game.dialogue && !game.dialogue.alive) game.dialogue = undefined;
-}
+};
+
+/*
+
+COMBAT ENGINE (turn based)
+- take turns (enemy has moves as well)
+- use single controls for targeting/selecting (state variable)
+- allow for more kinds of abilities, targeting
+  - area-of-effect
+  - miss chance (?)
+  - status effects, vulnerabilities
+- improve UI considerably!
+- items, loaded from inventory
+
+- have better way of loading enemy information from scene
+- trigger from scene, have effect on combat end
+
+BUG: 
+- each new battle adds another set of enemies...
+
+ */
+
+var combat = game.add(Object.create(Scene).init());
+combat.onStart = function () {
+  this.bg = this.add(Object.create(Layer).init(game.w, game.h));
+  this.bg.add(Object.create(SpriteFont).init(Resources.font, "combat")).set({x: game.w / 2, y: 16});
+
+  this.enemies = [];
+  for (var i = 0; i < fight.enemies.length; i++) {
+    var e = this.bg.add(Object.create(Sprite).init(fight.enemies[i].sprite)).set({x: game.w - 64 + i * 18, y: game.h / 4, scale: 1 + Math.random() * 0.4, hp: 10, opacity: 0.5});
+    e.hp_text = this.bg.add(Object.create(SpriteFont).init(Resources.font, "10hp")).set({x: e.x, y: e.y - 10 });
+    this.enemies.push(e);
+  }
+  this.targeted = 0;
+  this.enemies[this.targeted].opacity = 1;
+
+  this.hp = fight.player.hp;
+  this.abilities = [];
+  for (var i = 0; i < fight.player.abilities.length; i++) {
+    this.abilities.push(this.bg.add(Object.create(SpriteFont).init(Resources.font, fight.player.abilities[i].name)).set({x: 16, y: game.h / 4 + i * 16, align: "left", opacity: 0.5}));    
+  }
+  this.selected = 0;
+  this.abilities[this.selected].opacity = 1;
+
+  this.status = function () {
+    for (var i = this.enemies.length - 1; i >= 0; i--) {
+      this.enemies[i].hp_text.text = this.enemies[i].hp + "hp";
+      console.log(this.enemies[i].hp, 'status');
+      if (this.enemies[i].hp <= 0) {
+        this.enemies[i].alive = false;
+        this.enemies.splice(i, 1);
+      }
+    }
+    if (this.enemies.length <= 0) {
+      game.setScene(0, false);
+    }
+  }
+
+  this.onKeyDown = function (e) {
+    switch (e.keyCode) {
+      case 38:
+        combat.abilities[combat.selected].opacity = 0.5;
+        combat.selected = modulo(combat.selected - 1, combat.abilities.length);
+        combat.abilities[combat.selected].opacity = 1;
+        break;
+      case 40:
+        combat.abilities[combat.selected].opacity = 0.5;
+        combat.selected = modulo(combat.selected + 1, combat.abilities.length);
+        combat.abilities[combat.selected].opacity = 1;
+        break;
+      case 37:
+        combat.enemies[combat.targeted].opacity = 0.5;
+        combat.targeted = modulo(combat.targeted - 1, combat.enemies.length);
+        combat.enemies[combat.targeted].opacity = 1;
+        break;
+      case 39:
+        combat.enemies[combat.targeted].opacity = 0.5;
+        combat.targeted = modulo(combat.targeted + 1, combat.enemies.length);
+        combat.enemies[combat.targeted].opacity = 1;
+        break;
+      case 32:
+        fight.player.abilities[combat.selected].do_ability(combat.enemies[combat.targeted]);
+        combat.status();
+        break;
+      case 27:
+        game.setScene(0, false);
+        break;
+    }
+  };
+  this.ready = true; // raindrop --> SOMETHING ELSE
+};
+
+var gameover = game.add(Object.create(Scene).init());
+gameover.onStart = function () {
+  this.bg = this.add(Object.create(Layer).init(game.w, game.h));
+  this.bg.add(Object.create(SpriteFont).init(Resources.font, "game over.")).set({scale: 2, x: game.w / 2, y: game.h / 2});
+};
+
+DEBUG = true;

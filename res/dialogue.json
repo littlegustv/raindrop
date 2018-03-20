@@ -1,1 +1,128 @@
-{"url_key":"x9xb","title":"The Cat","data":{"initial":"couldYouHelpMe","optionMirroring":true,"allowCheckpoints":false,"editorData":{"authorName":"Anonymous","playPoint":"youFoundHimThank","textSize":2,"libraryVisible":false},"stitches":{"thankYou":{"content":["Thank you!"]},"ohISuppose":{"content":["Oh!  I suppose...",{"flagName":"unhelpful"}]},"youFoundHimThank":{"content":["You found him!  Thank you so much!!!"]},"ohWellHopefullyY":{"content":["Oh, well, hopefully you'll run into each other.",{"flagName":"unhelpful"}]},"wouldYouICantLea":{"content":["Would you?!  I can't leave, and I am worried.",{"linkPath":"ohISuppose","notIfConditions":null,"ifConditions":null,"option":"Cats can look after themselves."},{"linkPath":"thankYou","notIfConditions":null,"ifConditions":null,"option":"I understand.\u00a0 Don't worry."}]},"itMightSeemSilly":{"content":["It might seem... silly.  I saw a cat here the other day, and now it's gone.",{"linkPath":"ohWellHopefullyY","notIfConditions":null,"ifConditions":null,"option":"That's too bad."},{"linkPath":"wouldYouICantLea","notIfConditions":null,"ifConditions":null,"option":"Would you like me to look for it?"}]},"ohOkIUnderstand":{"content":["Oh ok, I understand.",{"flagName":"unhelpful"}]},"couldYouHelpMe":{"content":["Could you help me?",{"linkPath":"itMightSeemSilly","notIfConditions":[{"notIfCondition":"unhelpful"},{"notIfCondition":"found"}],"ifConditions":null,"option":"Ok"},{"linkPath":"ohOkIUnderstand","notIfConditions":[{"notIfCondition":"found"}],"ifConditions":null,"option":"Not right now"},{"linkPath":"youFoundHimThank","notIfConditions":null,"ifConditions":[{"ifCondition":"found"}],"option":"Actually..."},{"pageNum":1}]}}},"updated_at":"2018-03-16T16:07:53Z","created_at":"2018-03-12T20:21:09Z"}
+{
+  "created_at": "2018-03-12T20:21:09Z",
+  "data": {
+    "allowCheckpoints": false,
+    "editorData": {
+      "authorName": "Anonymous",
+      "libraryVisible": false,
+      "playPoint": "youFoundHimThank",
+      "textSize": 2
+    },
+    "initial": "couldYouHelpMe",
+    "optionMirroring": true,
+    "stitches": {
+      "couldYouHelpMe": {
+        "content": [
+          "Could you help me?",
+          {
+            "ifConditions": null,
+            "linkPath": "itMightSeemSilly",
+            "notIfConditions": [
+              {
+                "notIfCondition": "unhelpful"
+              },
+              {
+                "notIfCondition": "found"
+              }
+            ],
+            "option": "Ok"
+          },
+          {
+            "ifConditions": null,
+            "linkPath": "ohOkIUnderstand",
+            "notIfConditions": [
+              {
+                "notIfCondition": "found"
+              }
+            ],
+            "option": "Not right now"
+          },
+          {
+            "ifConditions": [
+              {
+                "ifCondition": "found"
+              }
+            ],
+            "linkPath": "youFoundHimThank",
+            "notIfConditions": null,
+            "option": "Actually..."
+          },
+          {
+            "pageNum": 1
+          }
+        ]
+      },
+      "itMightSeemSilly": {
+        "content": [
+          "It might seem... silly.  I saw a cat here the other day, and now it's gone.",
+          {
+            "ifConditions": null,
+            "linkPath": "ohWellHopefullyY",
+            "notIfConditions": null,
+            "option": "That's too bad."
+          },
+          {
+            "ifConditions": null,
+            "linkPath": "wouldYouICantLea",
+            "notIfConditions": null,
+            "option": "Would you like me to look for it?"
+          }
+        ]
+      },
+      "ohISuppose": {
+        "content": [
+          "Oh!  I suppose...",
+          {
+            "flagName": "unhelpful"
+          }
+        ]
+      },
+      "ohOkIUnderstand": {
+        "content": [
+          "Oh ok, I understand.",
+          {
+            "flagName": "unhelpful"
+          }
+        ]
+      },
+      "ohWellHopefullyY": {
+        "content": [
+          "Oh, well, hopefully you'll run into each other.",
+          {
+            "flagName": "unhelpful"
+          }
+        ]
+      },
+      "thankYou": {
+        "content": [
+          "Thank you!"
+        ]
+      },
+      "wouldYouICantLea": {
+        "content": [
+          "Would you?!  I can't leave, and I am worried.",
+          {
+            "ifConditions": null,
+            "linkPath": "ohISuppose",
+            "notIfConditions": null,
+            "option": "Cats can look after themselves."
+          },
+          {
+            "ifConditions": null,
+            "linkPath": "thankYou",
+            "notIfConditions": null,
+            "option": "I understand.  Don't worry."
+          }
+        ]
+      },
+      "youFoundHimThank": {
+        "content": [
+          "You found him!  Thank you so much!!!"
+        ]
+      }
+    }
+  },
+  "title": "The Cat",
+  "updated_at": "2018-03-16T16:07:53Z",
+  "url_key": "x9xb"
+}
