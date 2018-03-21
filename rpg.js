@@ -185,6 +185,38 @@ TileMove.move = function (direction) {
   }
 };
 
+var ABILITIES = {
+  fire: {
+    name: 'fire',
+    cost: 2,
+    damage: {min: 1, max: 4},
+    target: function (enemies, index) {
+      return enemies;
+    },
+    act: function (targets) {
+      for (var i = 0; i < targets.length; i++) {
+        targets[i].hp -= randint(this.damage.min, this.damage.max);
+        var f = targets[i].layer.add(Object.create(SpriteFont).init(Resources.font, "BURN!")).set({x: targets[i].x, y: targets[i].y, z: targets[i].z + 1, velocity: {x: 0, y: 20, angle: PI / 3}});
+        f.add(Velocity);
+        f.add(FadeOut, {duration: 0.2, delay: 0.3});
+      }
+    }
+  },
+  chop: {
+    name: 'chop',
+    cost: 0,
+    damage: {min: 1, max: 1},
+    target: function (enemies, index) {
+      return [enemies[index]];
+    },
+    act: function (targets) {
+      for (var i = 0; i < targets.length; i++) {
+        targets[i].hp -= randint(this.damage.min, this.damage.max);
+      }
+    }
+  }
+}
+
 var game = Object.create(World).init(320, 180);
 game.resource_path = "";
 game.gameInfo = {resources: [
@@ -225,8 +257,7 @@ scene.onStart = function () {
 
   witch.hp = 10;
   witch.abilities = [
-    {name: "fire", cost: 2, damage: {min: 1, max: 5}, do_ability: function (target) { target.hp -= randint(this.damage.min, this.damage.max); }},
-    {name: "chop", cost: 0, damage: {min: 1, max: 2}, do_ability: function (target) { target.hp -= randint(this.damage.min, this.damage.max); }}
+    ABILITIES.fire, ABILITIES.chop
   ];
   // set talkable coordinates to solid
   var gcoord = witch.move.toGrid(g.x, g.y);
@@ -342,11 +373,10 @@ scene.onUpdate = function () {
 /*
 
 COMBAT ENGINE (turn based)
-- take turns (enemy has moves as well)
-- use single controls for targeting/selecting (state variable)
+x- take turns (enemy has moves as well)
+x- use single controls for targeting/selecting (state variable)
 - allow for more kinds of abilities, targeting
-  - area-of-effect
-  - miss chance (?)
+  x- area-of-effect
   - status effects, vulnerabilities
 - improve UI considerably!
 - items, loaded from inventory
@@ -361,26 +391,34 @@ BUG:
 
 var combat = game.add(Object.create(Scene).init());
 combat.onStart = function () {
+  this.cursor = 0;
+  this.selected = undefined;
+  this.targeted = undefined;
   this.bg = this.add(Object.create(Layer).init(game.w, game.h));
   this.bg.add(Object.create(SpriteFont).init(Resources.font, "combat")).set({x: game.w / 2, y: 16});
+
+  this.player_hp = this.bg.add(Object.create(SpriteFont).init(Resources.font, fight.player.hp + "hp")).set({x: 8, y: game.h - 12, align: "left"});
 
   this.enemies = [];
   for (var i = 0; i < fight.enemies.length; i++) {
     var e = this.bg.add(Object.create(Sprite).init(fight.enemies[i].sprite)).set({x: game.w - 64 + i * 18, y: game.h / 4, scale: 1 + Math.random() * 0.4, hp: 10, opacity: 0.5});
     e.hp_text = this.bg.add(Object.create(SpriteFont).init(Resources.font, "10hp")).set({x: e.x, y: e.y - 10 });
+    e.choose = function () { return choose(this.abilities); };
+    e.abilities = [
+      ABILITIES.chop
+    ]
     this.enemies.push(e);
   }
-  this.targeted = 0;
-  this.enemies[this.targeted].opacity = 1;
+  this.enemies[this.cursor].opacity = 1;
 
   this.hp = fight.player.hp;
   this.abilities = [];
   for (var i = 0; i < fight.player.abilities.length; i++) {
     this.abilities.push(this.bg.add(Object.create(SpriteFont).init(Resources.font, fight.player.abilities[i].name)).set({x: 16, y: game.h / 4 + i * 16, align: "left", opacity: 0.5}));    
   }
-  this.selected = 0;
-  this.abilities[this.selected].opacity = 1;
+  this.abilities[this.cursor].opacity = 1;
 
+  this.turn = 0;
   this.status = function () {
     for (var i = this.enemies.length - 1; i >= 0; i--) {
       this.enemies[i].hp_text.text = this.enemies[i].hp + "hp";
@@ -390,49 +428,83 @@ combat.onStart = function () {
         this.enemies.splice(i, 1);
       }
     }
+    this.player_hp.text = fight.player.hp + "hp";
     if (this.enemies.length <= 0) {
       game.setScene(0, false);
+    } else if (fight.player.hp <= 0) {
+      game.setScene(2, false);
+      game.scene.layers = [];
+      game.scene.onStart();
     }
-  }
+    this.turn = modulo(this.turn + 1, this.enemies.length + 1);
+    this.cooldown = 0.5;
+  };
+  this.cooldown = 0;
 
   this.onKeyDown = function (e) {
-    switch (e.keyCode) {
-      case 38:
-        combat.abilities[combat.selected].opacity = 0.5;
-        combat.selected = modulo(combat.selected - 1, combat.abilities.length);
-        combat.abilities[combat.selected].opacity = 1;
-        break;
-      case 40:
-        combat.abilities[combat.selected].opacity = 0.5;
-        combat.selected = modulo(combat.selected + 1, combat.abilities.length);
-        combat.abilities[combat.selected].opacity = 1;
-        break;
-      case 37:
-        combat.enemies[combat.targeted].opacity = 0.5;
-        combat.targeted = modulo(combat.targeted - 1, combat.enemies.length);
-        combat.enemies[combat.targeted].opacity = 1;
-        break;
-      case 39:
-        combat.enemies[combat.targeted].opacity = 0.5;
-        combat.targeted = modulo(combat.targeted + 1, combat.enemies.length);
-        combat.enemies[combat.targeted].opacity = 1;
-        break;
-      case 32:
-        fight.player.abilities[combat.selected].do_ability(combat.enemies[combat.targeted]);
-        combat.status();
-        break;
-      case 27:
-        game.setScene(0, false);
-        break;
+    if (combat.turn == 0) {
+      switch (e.keyCode) {
+        case 38:
+          if (combat.selected === undefined) {
+            combat.abilities[combat.cursor].opacity = 0.5;
+            combat.cursor = modulo(combat.cursor - 1, combat.abilities.length);
+            combat.abilities[combat.cursor].opacity = 1;            
+          } else if (combat.targeted === undefined) {
+            combat.enemies[combat.cursor].opacity = 0.5;
+            combat.cursor = modulo(combat.cursor - 1, combat.enemies.length);
+            combat.enemies[combat.cursor].opacity = 1;
+          }
+          break;
+        case 40:
+          if (combat.selected === undefined) {
+            combat.abilities[combat.cursor].opacity = 0.5;
+            combat.cursor = modulo(combat.cursor + 1, combat.abilities.length);
+            combat.abilities[combat.cursor].opacity = 1;
+          } else if (combat.targeted === undefined) {
+            combat.enemies[combat.cursor].opacity = 0.5;
+            combat.cursor = modulo(combat.cursor + 1, combat.enemies.length);
+            combat.enemies[combat.cursor].opacity = 1;
+          }
+          break;        
+        case 32:
+          if (combat.selected === undefined) {
+            combat.selected = combat.cursor;
+          } else if (combat.targeted === undefined) {
+            combat.targeted = combat.cursor;
+          } else {
+            targets = fight.player.abilities[combat.selected].target(combat.enemies, combat.targeted);
+            fight.player.abilities[combat.selected].act(targets);
+            combat.status();
+            this.selected = undefined;
+            this.targeted = undefined;
+            this.cursor = 0;            
+          }
+          break;
+        case 27:
+          game.setScene(0, false);
+          break;
+      }
     }
   };
   this.ready = true; // raindrop --> SOMETHING ELSE
 };
 
+combat.onUpdate = function (dt) {
+  if (this.cooldown > 0) {
+    this.cooldown -= dt;
+    return;
+  } else if (this.turn !== 0) {
+    this.enemies[this.turn - 1].abilities[0].act([fight.player]);
+    this.status();
+    this.cooldown = 1;
+  }
+}
+
 var gameover = game.add(Object.create(Scene).init());
 gameover.onStart = function () {
   this.bg = this.add(Object.create(Layer).init(game.w, game.h));
-  this.bg.add(Object.create(SpriteFont).init(Resources.font, "game over.")).set({scale: 2, x: game.w / 2, y: game.h / 2});
+  this.bg.add(Object.create(SpriteFont).init(Resources.font, "game over.")).set({x: game.w / 2, y: game.h / 2});
+  this.ready = true;
 };
 
-DEBUG = true;
+//DEBUG = true;
