@@ -1,19 +1,5 @@
 /*
 
-- dialogue
-  - conditions and state variables
-    - create better dialogue example
-    - look into using inky
-
-- turn-based combat engine
-  - new scene (combat), load from global COMBAT data object
-  - 'states' with buttons, controls like in game menu, salvage store, etc.
-  - enemies list
-  - load abilities data depending on global player info (class, level, etc.)
-  - transitions!  like have bg & fg cameras lerp in/out on load/exit
-  - go to second scene for stats (i.e. gained X experience, etc.)
-
-BUG: 
 */
 
 var fight = {
@@ -212,6 +198,9 @@ var ABILITIES = {
     act: function (targets) {
       for (var i = 0; i < targets.length; i++) {
         targets[i].hp -= randint(this.damage.min, this.damage.max);
+        var f = targets[i].layer.add(Object.create(SpriteFont).init(Resources.font, "chopchop")).set({x: targets[i].x, y: targets[i].y - 10, z: targets[i].z + 1, angle: PI / 4, velocity: {x: 0, y: 30}});
+        f.add(Velocity);
+        f.add(FadeOut, {duration: 0.2, delay: 0.3});        
       }
     }
   }
@@ -222,6 +211,9 @@ game.resource_path = "";
 game.gameInfo = {resources: [
   {path: "res/cat.png", frames: 1, animations: 1, speed: 0.25, name: "cat"},
   {path: "res/witch.png", frames: 3, animations: 4, speed: 0.25, name: "witch"},
+  {path: "res/demon.png", frames: 2, animations: 1, speed: 0.25, name: "demon"},
+  {path: "res/bug.png", frames: 2, animations: 1, speed: 0.25, name: "bug"},
+  {path: "res/menu.png", frames: 1, animations: 1, speed: 0.25, name: "menu"},
   {path: "res/font.png", frames: 95, animations: 1, speed: 0.25, name: "font"},
   {path: "res/tileset.png", frames: 4, animations: 4, speed: 0.5, name: "tileset"},
   {path: "res/spirit.png", frames: 1, animations: 1, speed: 0.5, name: "spirit"},
@@ -338,8 +330,9 @@ scene.onStart = function () {
         if (game.dialogue) game.dialogue.alive = false;
         else {
           fight.player = witch;
+          fight.enemies = [];
           for (var i = 0; i < 3; i++) {
-            fight.enemies.push({sprite: Resources.spirit});
+            fight.enemies.push({sprite: Resources[choose(["bug", "spirit", "demon"])]});
           }
           game.setScene(1, false);
           game.scene.layers = [];
@@ -375,17 +368,30 @@ scene.onUpdate = function () {
 COMBAT ENGINE (turn based)
 x- take turns (enemy has moves as well)
 x- use single controls for targeting/selecting (state variable)
-- allow for more kinds of abilities, targeting
-  x- area-of-effect
-  - status effects, vulnerabilities
-- improve UI considerably!
-- items, loaded from inventory
+- actions/menu tightening
+  - MENU structure, with commands, open/close and selection handling (i.e. I open 'skills', close it go to items, etc. - and it's all handled, preferably by a JS object structure)
+  - targeting of enemies, and visuals: targeting any N number of enemies, or ALL of them, depending on the skill (and SHOW it too)
+  - COMBAT object should store player (party) and enemy information SEPARATE from overworld entities
+  - visibility of enemies taking their turn (selection, action, pass to player)
+  - overworld COMBAT triggering (collision, or grid-based simplification)
+  - add MANA (cost), conditions (wind-up), and items (through menu)
 
-- have better way of loading enemy information from scene
-- trigger from scene, have effect on combat end
+- SIMPLE vuln-based spell system
+  - fire > ice > acid > lightning > poison >
+  - steal KNOCKDOWN from persona (status effect)
+
+- LONG TERM - gameplay ideas
+  - should just be move-based (no spatial tactics or anything)
+  - interesting things to steal from PERSONA
+    - 'block 1 ability' skill, forces player to throw away 'low card' skill
+    - 'reflect' - also have to consider what YOU are resistent/vulnerable to
+    - interplay: attack (RELFECT) enemy with an ability that you HEALS you; dispels their protection, & heals you!
+  - NEW ideas
+    - way to prevent spamming buff/debuff battle
+    - chaining - like building a straight in bridge or something - you get a bonus from landing spells in a certain order (i.e. Agidyne gets a bonus when following Agi)
+    - base off of poker hands (i.e. two Agi in a row [turn] - 'a pair' - a small bonus!); but HIDE the poker origins, because that's overdone and confusing ;)
 
 BUG: 
-- each new battle adds another set of enemies...
 
  */
 
@@ -395,14 +401,16 @@ combat.onStart = function () {
   this.selected = undefined;
   this.targeted = undefined;
   this.bg = this.add(Object.create(Layer).init(game.w, game.h));
+  this.bg.add(Object.create(Sprite).init(Resources.menu)).set({x: game.w / 2, y: game.h / 2, opacity: 0.5});
   this.bg.add(Object.create(SpriteFont).init(Resources.font, "combat")).set({x: game.w / 2, y: 16});
 
-  this.player_hp = this.bg.add(Object.create(SpriteFont).init(Resources.font, fight.player.hp + "hp")).set({x: 8, y: game.h - 12, align: "left"});
+  this.player = this.bg.add(Object.create(Sprite).init(fight.player.sprite)).set({x: game.w / 3, y: game.h - 24, animation: 1, z: 1});
+  this.player_hp = this.bg.add(Object.create(SpriteFont).init(Resources.font, fight.player.hp + "hp")).set({x: this.player.x, y: this.player.y - 12, align: "left"});
 
   this.enemies = [];
   for (var i = 0; i < fight.enemies.length; i++) {
-    var e = this.bg.add(Object.create(Sprite).init(fight.enemies[i].sprite)).set({x: game.w - 64 + i * 18, y: game.h / 4, scale: 1 + Math.random() * 0.4, hp: 10, opacity: 0.5});
-    e.hp_text = this.bg.add(Object.create(SpriteFont).init(Resources.font, "10hp")).set({x: e.x, y: e.y - 10 });
+    var e = this.bg.add(Object.create(Sprite).init(fight.enemies[i].sprite)).set({x: game.w - 120 + (i * i) * 9, y: game.h / 2 + i * 32, scale: 1 + Math.random() * 0.4, hp: 10, opacity: 0.5});
+    e.hp_text = this.bg.add(Object.create(SpriteFont).init(Resources.font, "10hp")).set({x: e.x, y: e.y - 12 });
     e.choose = function () { return choose(this.abilities); };
     e.abilities = [
       ABILITIES.chop
@@ -465,14 +473,13 @@ combat.onStart = function () {
             combat.cursor = modulo(combat.cursor + 1, combat.enemies.length);
             combat.enemies[combat.cursor].opacity = 1;
           }
-          break;        
+          break;
         case 32:
           if (combat.selected === undefined) {
             combat.selected = combat.cursor;
           } else if (combat.targeted === undefined) {
             combat.targeted = combat.cursor;
-          } else {
-            targets = fight.player.abilities[combat.selected].target(combat.enemies, combat.targeted);
+            targets = fight.player.abilities[   combat.selected].target(combat.enemies, combat.targeted);
             fight.player.abilities[combat.selected].act(targets);
             combat.status();
             this.selected = undefined;
@@ -504,6 +511,9 @@ var gameover = game.add(Object.create(Scene).init());
 gameover.onStart = function () {
   this.bg = this.add(Object.create(Layer).init(game.w, game.h));
   this.bg.add(Object.create(SpriteFont).init(Resources.font, "game over.")).set({x: game.w / 2, y: game.h / 2});
+  this.onKeyDown = function (e) {
+    game.setScene(0, false);
+  }
   this.ready = true;
 };
 
