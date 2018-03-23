@@ -363,13 +363,103 @@ scene.onUpdate = function () {
   if (game.dialogue && !game.dialogue.alive) game.dialogue = undefined;
 };
 
+// should this by a PLAYER.combat_menu? wait- this is DATA, we need a HANDLER
+var combat_menu = {
+  title: "COMBAT!",
+  skills: {
+    title: "Skills",
+    agi: function () {},
+    bash: function () {},
+  },
+  items: {
+    title: "Inventory",
+    consumables: {
+      potions: [
+        {name: "health" },
+        {name: "mana" }
+      ]
+    }
+  },
+  flee: {
+    title: "Really!?",
+    yes: function () { game.setScene(0, false); },
+    no: function () { /* move up in menu somehow ... */ }
+  }
+};
+
+/* 
+- remove this "title" garbage
+- have way of triggering action, external effect, maybe?
+- create menu for targeting? or something...
+*/
+var Menu = Object.create(DialogueTree);
+Menu.init = function (font, data) {
+  this.oldInit(font);
+  this.root = data;
+  this.current = data;
+  this.path = [];
+  this.reset_selection();
+  return this;
+};
+Menu.reset_selection = function () {
+  this.keys = Object.keys(this.current);
+  this.keys.splice(this.keys.indexOf("title"), 1);
+  this.selected = 0;
+};
+Menu.down = function () {
+  if (this.current[this.keys[this.selected]].title) {
+    this.path.push(this.current);
+    this.current = this.current[this.keys[this.selected]];
+  } else {
+    this.current[this.keys[this.selected]]();
+  }
+  this.reset_selection();
+  // return?
+};
+Menu.up = function () {
+  if (this.path.length >= 1) {
+    this.current = this.path.pop();
+  } else {
+    console.log('At root.');
+  }
+  this.reset_selection();
+};
+Menu.next = function () {
+  this.selected = modulo(this.selected + 1, this.keys.length);
+};
+Menu.previous = function () {
+  this.selected = modulo(this.selected - 1, this.keys.length);
+};
+Menu.selectDisplay = function (text) {
+  return "[" + text + "]";
+};
+Menu.selectDisplay = function (text) {
+  return text.toUpperCase();
+};
+// override this, or keep drawing separate?
+Menu.onDraw = function (ctx) {
+  this.drawText(ctx, this.current.title, 0);
+  var i = 1;
+  for (var key in this.current) {
+    if (key == "title") {}
+    else if (key == this.keys[this.selected]) {
+      this.drawText(ctx, this.selectDisplay(key), i + 1);
+    } else {
+      this.drawText(ctx, key, i + 1);
+    }
+    i += 1;
+  }
+};
+
 /*
+
+FIRST: move to scene file structure???
 
 COMBAT ENGINE (turn based)
 x- take turns (enemy has moves as well)
 x- use single controls for targeting/selecting (state variable)
 - actions/menu tightening
-  - MENU structure, with commands, open/close and selection handling (i.e. I open 'skills', close it go to items, etc. - and it's all handled, preferably by a JS object structure)
+  x- MENU structure, with commands, open/close and selection handling (i.e. I open 'skills', close it go to items, etc. - and it's all handled, preferably by a JS object structure)
   - targeting of enemies, and visuals: targeting any N number of enemies, or ALL of them, depending on the skill (and SHOW it too)
   - COMBAT object should store player (party) and enemy information SEPARATE from overworld entities
   - visibility of enemies taking their turn (selection, action, pass to player)
@@ -420,11 +510,15 @@ combat.onStart = function () {
   this.enemies[this.cursor].opacity = 1;
 
   this.hp = fight.player.hp;
-  this.abilities = [];
+  
+  /*this.abilities = [];
+  
   for (var i = 0; i < fight.player.abilities.length; i++) {
     this.abilities.push(this.bg.add(Object.create(SpriteFont).init(Resources.font, fight.player.abilities[i].name)).set({x: 16, y: game.h / 4 + i * 16, align: "left", opacity: 0.5}));    
   }
-  this.abilities[this.cursor].opacity = 1;
+  this.abilities[this.cursor].opacity = 1;*/
+
+  this.ability_menu = this.bg.add(Object.create(Menu).init(Resources.font, combat_menu)).set({x: game.w / 8, y: game.h / 2, align: "left", spacing: 0});
 
   this.turn = 0;
   this.status = function () {
@@ -453,42 +547,24 @@ combat.onStart = function () {
     if (combat.turn == 0) {
       switch (e.keyCode) {
         case 38:
-          if (combat.selected === undefined) {
-            combat.abilities[combat.cursor].opacity = 0.5;
-            combat.cursor = modulo(combat.cursor - 1, combat.abilities.length);
-            combat.abilities[combat.cursor].opacity = 1;            
-          } else if (combat.targeted === undefined) {
-            combat.enemies[combat.cursor].opacity = 0.5;
-            combat.cursor = modulo(combat.cursor - 1, combat.enemies.length);
-            combat.enemies[combat.cursor].opacity = 1;
-          }
+          this.ability_menu.previous();           
           break;
         case 40:
-          if (combat.selected === undefined) {
-            combat.abilities[combat.cursor].opacity = 0.5;
-            combat.cursor = modulo(combat.cursor + 1, combat.abilities.length);
-            combat.abilities[combat.cursor].opacity = 1;
-          } else if (combat.targeted === undefined) {
-            combat.enemies[combat.cursor].opacity = 0.5;
-            combat.cursor = modulo(combat.cursor + 1, combat.enemies.length);
-            combat.enemies[combat.cursor].opacity = 1;
-          }
+          this.ability_menu.next();
           break;
         case 32:
-          if (combat.selected === undefined) {
-            combat.selected = combat.cursor;
-          } else if (combat.targeted === undefined) {
-            combat.targeted = combat.cursor;
+          this.ability_menu.down();
+          /*  combat.targeted = combat.cursor;
             targets = fight.player.abilities[   combat.selected].target(combat.enemies, combat.targeted);
             fight.player.abilities[combat.selected].act(targets);
             combat.status();
             this.selected = undefined;
             this.targeted = undefined;
-            this.cursor = 0;            
-          }
+            this.cursor = 0;   */         
           break;
         case 27:
-          game.setScene(0, false);
+          this.ability_menu.up();
+          //game.setScene(0, false);
           break;
       }
     }
