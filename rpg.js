@@ -363,37 +363,9 @@ scene.onUpdate = function () {
   if (game.dialogue && !game.dialogue.alive) game.dialogue = undefined;
 };
 
-// should this by a PLAYER.combat_menu? wait- this is DATA, we need a HANDLER
-var combat_menu = {
-  title: "COMBAT!",
-  skills: {
-    title: "Skills",
-    agi: function () {},
-    bash: function () {},
-  },
-  items: {
-    title: "Inventory",
-    consumables: {
-      potions: [
-        {name: "health" },
-        {name: "mana" }
-      ]
-    }
-  },
-  flee: {
-    title: "Really!?",
-    yes: function () { game.setScene(0, false); },
-    no: function () { /* move up in menu somehow ... */ }
-  }
-};
-
-/* 
-- remove this "title" garbage
-- have way of triggering action, external effect, maybe?
-- create menu for targeting? or something...
-*/
 var Menu = Object.create(DialogueTree);
 Menu.init = function (font, data) {
+  this.title = "MENU";
   this.oldInit(font);
   this.root = data;
   this.current = data;
@@ -403,15 +375,16 @@ Menu.init = function (font, data) {
 };
 Menu.reset_selection = function () {
   this.keys = Object.keys(this.current);
-  this.keys.splice(this.keys.indexOf("title"), 1);
   this.selected = 0;
 };
 Menu.down = function () {
-  if (this.current[this.keys[this.selected]].title) {
-    this.path.push(this.current);
-    this.current = this.current[this.keys[this.selected]];
-  } else {
-    this.current[this.keys[this.selected]]();
+  if (this.current[this.keys[this.selected]]) {
+    if (typeof this.current[this.keys[this.selected]] === "function") {
+      return this.current[this.keys[this.selected]]();
+    } else {
+      this.path.push(this.current);
+      this.current = this.current[this.keys[this.selected]];
+    }
   }
   this.reset_selection();
   // return?
@@ -433,23 +406,121 @@ Menu.previous = function () {
 Menu.selectDisplay = function (text) {
   return "[" + text + "]";
 };
-Menu.selectDisplay = function (text) {
+/*Menu.selectDisplay = function (text) {
   return text.toUpperCase();
-};
+};*/
 // override this, or keep drawing separate?
 Menu.onDraw = function (ctx) {
-  this.drawText(ctx, this.current.title, 0);
-  var i = 1;
+  //this.drawText(ctx, this.title, 0);
+  var i = 0;
   for (var key in this.current) {
     if (key == "title") {}
     else if (key == this.keys[this.selected]) {
-      this.drawText(ctx, this.selectDisplay(key), i + 1);
+      this.drawText(ctx, this.selectDisplay(key), i);
     } else {
-      this.drawText(ctx, key, i + 1);
+      this.drawText(ctx, key, i);
     }
     i += 1;
   }
 };
+
+var Targeting = {
+  init: function (targets, n) {
+    this.targets = targets;
+    this.selected = Array(n).fill(1).map(function (i, index) { return index; });
+    this.reset_selection();
+    return this;
+  },
+  reset_selection: function () {
+    for (var i = 0; i < this.targets.length; i++) {
+      if (this.selected.indexOf(i) !== -1) {
+        this.targets[i].opacity = 1;
+      } else {
+        this.targets[i].opacity = 0.5;
+      }
+    }
+  },
+  next: function () {
+    if (this.selected.length >= this.targets.length) return;
+    for (var i = 0; i < this.selected.length; i++) {
+      this.selected[i] = modulo(this.selected[i] + 1, this.targets.length);
+    }
+    this.reset_selection();
+  },
+  previous: function () {
+    if (this.selected.length >= this.targets.length) return;
+    for (var i = 0; i < this.selected.length; i++) {
+      this.selected[i] = modulo(this.selected[i] - 1, this.targets.length);
+    }
+    this.reset_selection();
+  },
+  confirm: function () {
+    var confirmed = [];
+    for (var i = 0; i < this.selected.length; i++) {
+      confirmed.push(this.targets[this.selected[i]]);
+    }
+    return confirmed;
+  }
+};
+
+var Ability = {
+  init: function (targets) {
+    this.targeting = Object.create(Targeting).init(targets, this.num_targets());
+    return this;
+  },
+  num_targets: function () { return 1; },
+  target: function () {
+    this.targets = this.targeting.confirm();
+  },
+  act: function () {
+    for (var i = 0; i < this.targets.length; i++) {
+      this.effect(this.targets[i]);
+    }
+  },
+  effect: function (target) {
+    target.opacity = 0.1;
+  }
+};
+
+var Agi = Object.create(Ability);
+Agi.effect = function (target) {
+  target.hp -= 2;
+  target.hp_text.text = target.hp + "hp";
+  var b = target.layer.add(Object.create(SpriteFont).init(Resources.font, "burn!")).set({x: target.x, y: target.y, z: target.z + 1, angle: PI / 4});
+  b.add(FadeOut, {duration: 0.2, delay: 0.3});
+};
+Agi.num_targets = function () { return 2; };
+
+var Bash = Object.create(Ability);
+Bash.effect = function (target) {
+  target.hp -= 5;
+  target.hp_text.text = target.hp + "hp";
+  var b = target.layer.add(Object.create(SpriteFont).init(Resources.font, "BASH.")).set({x: target.x, y: target.y, z: target.z + 1});
+  b.add(FadeOut, {duration: 0.2, delay: 0.3});
+};
+
+
+// should this by a PLAYER.combat_menu? wait- this is DATA, we need a HANDLER
+var combat_menu = {
+  Skills: {
+    Agi: function () { return Agi; },
+    Bash: function () { return Bash; },
+  },
+  Inventory: {
+    Consumables: {
+      Potions: {
+        Health: function () {},
+        Mana: function () {}
+      }
+    }
+  },
+  "Flee!": {
+    Yes: function () { game.setScene(0, false); },
+    No: function () { /* move up in menu somehow ... */ }
+  }
+};
+
+
 
 /*
 
@@ -460,11 +531,16 @@ x- take turns (enemy has moves as well)
 x- use single controls for targeting/selecting (state variable)
 - actions/menu tightening
   x- MENU structure, with commands, open/close and selection handling (i.e. I open 'skills', close it go to items, etc. - and it's all handled, preferably by a JS object structure)
-  - targeting of enemies, and visuals: targeting any N number of enemies, or ALL of them, depending on the skill (and SHOW it too)
-  - COMBAT object should store player (party) and enemy information SEPARATE from overworld entities
+  x- targeting of enemies, and visuals: targeting any N number of enemies, or ALL of them, depending on the skill (and SHOW it too)
+  x- abilities that can do damage, that sort of thing??
+  
+  - separate SPRITES from combat objects
+    - player, enemies = {hp: 10, mana: 10, vuln: 'fire', resist: 'ice', sprite: SPRITE OBJECT HERE }, etc.
+    - also has functions like damage() for 'taking damage'
+  
   - visibility of enemies taking their turn (selection, action, pass to player)
-  - overworld COMBAT triggering (collision, or grid-based simplification)
   - add MANA (cost), conditions (wind-up), and items (through menu)
+  - overworld COMBAT triggering (collision, or grid-based simplification)
 
 - SIMPLE vuln-based spell system
   - fire > ice > acid > lightning > poison >
@@ -544,16 +620,40 @@ combat.onStart = function () {
   this.cooldown = 0;
 
   this.onKeyDown = function (e) {
-    if (combat.turn == 0) {
+    if (combat.turn === 0) {
       switch (e.keyCode) {
         case 38:
-          this.ability_menu.previous();           
+          if (this.ability) {
+            if (!this.ability.targets) {
+              this.ability.targeting.previous();
+            }
+          } else {
+            this.ability_menu.previous();
+          }
           break;
         case 40:
-          this.ability_menu.next();
+          if (this.ability) {
+            if (!this.ability.targets) {
+              this.ability.targeting.next();              
+            }
+          } else {
+            this.ability_menu.next();
+          }
           break;
         case 32:
-          this.ability_menu.down();
+          if (this.ability) {
+            if (!this.ability.targets) {
+              this.ability.target();
+            } else {
+              this.ability.act();
+              this.ability = undefined;
+            }
+          } else {
+            var a = this.ability_menu.down();
+            if (a) {
+              this.ability = Object.create(a).init(combat.enemies);
+            }
+          }
           /*  combat.targeted = combat.cursor;
             targets = fight.player.abilities[   combat.selected].target(combat.enemies, combat.targeted);
             fight.player.abilities[combat.selected].act(targets);
@@ -563,7 +663,15 @@ combat.onStart = function () {
             this.cursor = 0;   */         
           break;
         case 27:
-          this.ability_menu.up();
+          if (this.ability) {
+            if (this.ability.targets) {
+              this.ability.targets = undefined;
+            } else {
+              this.ability = undefined;
+            } 
+          } else {
+            this.ability_menu.up();            
+          }
           //game.setScene(0, false);
           break;
       }
