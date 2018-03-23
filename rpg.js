@@ -209,6 +209,7 @@ var ABILITIES = {
 var game = Object.create(World).init(320, 180);
 game.resource_path = "";
 game.gameInfo = {resources: [
+  {path: "res/plant.png", frames: 1, animations: 1, speed: 0.25, name: "plant"},
   {path: "res/cat.png", frames: 1, animations: 1, speed: 0.25, name: "cat"},
   {path: "res/witch.png", frames: 3, animations: 4, speed: 0.25, name: "witch"},
   {path: "res/demon.png", frames: 2, animations: 1, speed: 0.25, name: "demon"},
@@ -242,7 +243,7 @@ scene.onStart = function () {
   }
   var witch = bg.add(Object.create(Sprite).init(Resources.witch)).set({x: 8 + 8 * 16, y: 8 + 3 * 16, z: 10, offset: {x: 0, y: -10}});
   debug = witch;
-  var g = bg.add(Object.create(Sprite).init(Resources.spirit)).set({x: 8 * 16 + 8, y: 4 * 16 + 8, data: Resources.dialogue.data });
+  var g = bg.add(Object.create(Sprite).init(Resources.plant)).set({x: 8 * 16 + 8, y: 5 * 16 + 8, offset: {x: 0, y: -16}, data: Resources.dialogue.data });
   this.talkables.push(g);
 
   witch.move = witch.add(TileMove, {direction: {x: 0, y: 0}, offset: {x: 8, y: 8}, tilesize: 16, speed: 100, rate: 20, grid: grid});
@@ -434,9 +435,9 @@ var Targeting = {
   reset_selection: function () {
     for (var i = 0; i < this.targets.length; i++) {
       if (this.selected.indexOf(i) !== -1) {
-        this.targets[i].opacity = 1;
+        this.targets[i].sprite.opacity = 1;
       } else {
-        this.targets[i].opacity = 0.5;
+        this.targets[i].sprite.opacity = 0.5;
       }
     }
   },
@@ -486,7 +487,7 @@ var Agi = Object.create(Ability);
 Agi.effect = function (target) {
   target.hp -= 2;
   target.hp_text.text = target.hp + "hp";
-  var b = target.layer.add(Object.create(SpriteFont).init(Resources.font, "burn!")).set({x: target.x, y: target.y, z: target.z + 1, angle: PI / 4});
+  var b = target.sprite.layer.add(Object.create(SpriteFont).init(Resources.font, "burn!")).set({x: target.sprite.x, y: target.sprite.y, z: target.sprite.z + 1, angle: PI / 4});
   b.add(FadeOut, {duration: 0.2, delay: 0.3});
 };
 Agi.num_targets = function () { return 2; };
@@ -495,7 +496,7 @@ var Bash = Object.create(Ability);
 Bash.effect = function (target) {
   target.hp -= 5;
   target.hp_text.text = target.hp + "hp";
-  var b = target.layer.add(Object.create(SpriteFont).init(Resources.font, "BASH.")).set({x: target.x, y: target.y, z: target.z + 1});
+  var b = target.sprite.layer.add(Object.create(SpriteFont).init(Resources.font, "BASH.")).set({x: target.sprite.x, y: target.sprite.y, z: target.sprite.z + 1});
   b.add(FadeOut, {duration: 0.2, delay: 0.3});
 };
 
@@ -526,20 +527,13 @@ var combat_menu = {
 
 FIRST: move to scene file structure???
 
-COMBAT ENGINE (turn based)
-x- take turns (enemy has moves as well)
-x- use single controls for targeting/selecting (state variable)
-- actions/menu tightening
-  x- MENU structure, with commands, open/close and selection handling (i.e. I open 'skills', close it go to items, etc. - and it's all handled, preferably by a JS object structure)
-  x- targeting of enemies, and visuals: targeting any N number of enemies, or ALL of them, depending on the skill (and SHOW it too)
-  x- abilities that can do damage, that sort of thing??
-  
-  - separate SPRITES from combat objects
-    - player, enemies = {hp: 10, mana: 10, vuln: 'fire', resist: 'ice', sprite: SPRITE OBJECT HERE }, etc.
-    - also has functions like damage() for 'taking damage'
-  
+COMBAT: 
+
   - visibility of enemies taking their turn (selection, action, pass to player)
+    - standardize 'combat entity' creation
+      - SUBOBJECTS: hp (mp?) text, status text, portrait, avatar (normal sprite), selected icon
   - add MANA (cost), conditions (wind-up), and items (through menu)
+  
   - overworld COMBAT triggering (collision, or grid-based simplification)
 
 - SIMPLE vuln-based spell system
@@ -561,6 +555,21 @@ BUG:
 
  */
 
+var Combat = {
+  init: function (data) {
+    this.hp = 10;
+    for (var key in data) {
+      this[key] = data[key];
+    }
+    return this;
+  },
+  damage: function (n) {
+    this.hp -= damage;
+    this.hp_text.text = this.hp + "hp";
+  }
+  // add ability choose, etc.
+};
+
 var combat = game.add(Object.create(Scene).init());
 combat.onStart = function () {
   this.cursor = 0;
@@ -570,17 +579,19 @@ combat.onStart = function () {
   this.bg.add(Object.create(Sprite).init(Resources.menu)).set({x: game.w / 2, y: game.h / 2, opacity: 0.5});
   this.bg.add(Object.create(SpriteFont).init(Resources.font, "combat")).set({x: game.w / 2, y: 16});
 
-  this.player = this.bg.add(Object.create(Sprite).init(fight.player.sprite)).set({x: game.w / 3, y: game.h - 24, animation: 1, z: 1});
-  this.player_hp = this.bg.add(Object.create(SpriteFont).init(Resources.font, fight.player.hp + "hp")).set({x: this.player.x, y: this.player.y - 12, align: "left"});
+  this.player = {hp: 10, mp: 10, vuln: "physical"};
+  this.player.sprite = this.bg.add(Object.create(Sprite).init(fight.player.sprite)).set({x: game.w / 3, y: game.h - 24, animation: 1, z: 1});
+  this.player.hp_text = this.bg.add(Object.create(SpriteFont).init(Resources.font, this.player.hp + "hp")).set({x: this.player.sprite.x, y: this.player.sprite.y - 12, align: "left"});
 
   this.enemies = [];
   for (var i = 0; i < fight.enemies.length; i++) {
-    var e = this.bg.add(Object.create(Sprite).init(fight.enemies[i].sprite)).set({x: game.w - 120 + (i * i) * 9, y: game.h / 2 + i * 32, scale: 1 + Math.random() * 0.4, hp: 10, opacity: 0.5});
-    e.hp_text = this.bg.add(Object.create(SpriteFont).init(Resources.font, "10hp")).set({x: e.x, y: e.y - 12 });
+    var e = Object.create(Combat).init({hp: 10, mp: 10, vuln: 'fire'});
+    e.sprite = this.bg.add(Object.create(Sprite).init(fight.enemies[i].sprite)).set({x: game.w - 120 + (i * i) * 9, y: game.h / 2 + i * 32 });
+    e.hp_text = this.bg.add(Object.create(SpriteFont).init(Resources.font, "10hp")).set({x: e.sprite.x, y: e.sprite.y - 12 });
     e.choose = function () { return choose(this.abilities); };
     e.abilities = [
-      ABILITIES.chop
-    ]
+      Object.create(Bash).init([this.player])
+    ];
     this.enemies.push(e);
   }
   this.enemies[this.cursor].opacity = 1;
@@ -647,6 +658,8 @@ combat.onStart = function () {
             } else {
               this.ability.act();
               this.ability = undefined;
+              this.turn += 1;
+              this.cooldown = 0.4
             }
           } else {
             var a = this.ability_menu.down();
@@ -685,8 +698,9 @@ combat.onUpdate = function (dt) {
     this.cooldown -= dt;
     return;
   } else if (this.turn !== 0) {
-    this.enemies[this.turn - 1].abilities[0].act([fight.player]);
-    this.status();
+    this.enemies[this.turn - 1].abilities[0].target();
+    this.enemies[this.turn - 1].abilities[0].act();
+    this.turn = modulo(this.turn + 1, this.enemies.length + 1);
     this.cooldown = 1;
   }
 }
