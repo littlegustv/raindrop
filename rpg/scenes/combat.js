@@ -12,6 +12,7 @@ var onStart = function () {
   // 
   // ADD:
   // Status effects: (Array of icon sprites)
+  // Status texts: ('Down', "Sleeping", etc.)
 
 
   this.bg = this.add(Object.create(Layer).init(game.w, game.h));
