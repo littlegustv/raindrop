@@ -1,0 +1,29 @@
+{
+  "scenes": [
+    {
+      "name": "main.js",
+      "reload": true
+    },
+    {
+      "name": "combat.js",
+      "reload": false
+    },
+    {
+      "name": "gameover.js",
+      "reload": true
+    }    
+  ],
+  "resources": [
+    {"path": "plant.png", "frames": 1, "animations": 1, "speed": 0.25},
+    {"path": "portrait.png", "frames": 1, "animations": 1, "speed": 0.25},
+    {"path": "cat.png", "frames": 1, "animations": 1, "speed": 0.25},
+    {"path": "witch.png", "frames": 3, "animations": 4, "speed": 0.25},
+    {"path": "demon.png", "frames": 2, "animations": 1, "speed": 0.25},
+    {"path": "bug.png", "frames": 2, "animations": 1, "speed": 0.25},
+    {"path": "font.png", "frames": 95, "animations": 1, "speed": 0.25},
+    {"path": "tileset.png", "frames": 4, "animations": 4, "speed": 0.5},
+    {"path": "spirit.png", "frames": 1, "animations": 1, "speed": 0.5},
+    {"path": "rpg.json"},
+    {"path": "dialogue.json"}  
+  ]
+}
